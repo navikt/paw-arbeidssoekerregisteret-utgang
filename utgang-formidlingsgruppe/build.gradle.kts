@@ -1,12 +1,24 @@
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
+
 plugins {
     kotlin("jvm")
+    id("com.google.cloud.tools.jib") version "3.4.1"
+    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     application
 }
 
 val pawUtilsVersion = "24.02.06.10-1"
 val kafkaStreamsVersion = "3.6.0"
+val arbeidssokerregisteretVersion = "1.8062260419.22-1"
+val jvmVersion = JavaVersion.VERSION_21
+val image: String? by project
+
+val schema by configurations.creating {
+    isTransitive = false
+}
 
 dependencies {
+    schema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:$arbeidssokerregisteretVersion")
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
     implementation("no.nav.paw.hoplite-config:hoplite-config:$pawUtilsVersion")
 
@@ -27,7 +39,7 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(jvmVersion.majorVersion)
     }
 }
 
@@ -35,8 +47,17 @@ application {
     mainClass = "org.example.AppKt"
 }
 
+jib {
+    from.image = "ghcr.io/navikt/baseimages/temurin:${jvmVersion.majorVersion}"
+    to.image = "${image ?: rootProject.name }:${project.version}"
+}
+
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+
+tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
+    source(zipTree(schema.singleFile))
 }
 
 tasks.withType(Jar::class) {
