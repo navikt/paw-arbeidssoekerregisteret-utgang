@@ -6,8 +6,8 @@ plugins {
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     application
 }
-
-val jvmVersion = JavaVersion.VERSION_21
+val javaVersion: String by project
+val jvmVersion = JavaVersion.valueOf("VERSION_$javaVersion")
 val image: String? by project
 
 val schema by configurations.creating {
@@ -30,10 +30,9 @@ dependencies {
     implementation(jacskon.jacksonDatatypeJsr310)
     implementation(jacskon.jacksonModuleKotlin)
 
-    //ktor client
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.8")
-    implementation("io.ktor:ktor-client-core:2.3.8")
-    implementation("io.ktor:ktor-client-cio:2.3.8")
+    implementation(ktorClient.contentNegotiation)
+    implementation(ktorClient.core)
+    implementation(ktorClient.cio)
 
 }
 
@@ -50,7 +49,7 @@ application {
 
 jib {
     from.image = "ghcr.io/navikt/baseimages/temurin:${jvmVersion.majorVersion}"
-    to.image = "${image ?: rootProject.name }:${project.version}"
+    to.image = "${image ?: rootProject.name}:${project.version}"
 }
 
 tasks.named<Test>("test") {
