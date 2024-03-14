@@ -11,7 +11,7 @@ dependencies {
     implementation(ktorClient.cio)
     implementation(jacskon.ktorSerialization)
     implementation(navSecurity.tokenClient)
-    implementation(navCommon.tokenClient)
+    api(navCommon.tokenClient)
 }
 
 java {

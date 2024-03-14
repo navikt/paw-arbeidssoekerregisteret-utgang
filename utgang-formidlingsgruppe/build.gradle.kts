@@ -33,6 +33,8 @@ dependencies {
     implementation(ktorClient.core)
     implementation(ktorClient.cio)
     implementation(jacskon.ktorSerialization)
+
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
