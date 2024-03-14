@@ -130,6 +130,16 @@ dependencyResolutionManagement {
                 "com.fasterxml.jackson.module",
                 "jackson-module-kotlin"
             ).version(comFasterxmlJacksonVersion)
+            library(
+                "ktorSerialization",
+                "io.ktor",
+                "ktor-serialization-jackson"
+            ).version(ktorVersion)
+            library(
+                "ktorSerializationJvm",
+                "io.ktor",
+                "ktor-serialization-jackson-jvm"
+            ).version(ktorVersion)
         }
         create("navCommon") {
             library(
