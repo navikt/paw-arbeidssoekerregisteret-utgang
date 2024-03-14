@@ -20,6 +20,7 @@ dependencies {
     implementation(pawUtils.kafkaStreams)
     implementation(pawUtils.kafka)
     implementation(pawUtils.hopliteConfig)
+    implementation(arbeidssoekerRegisteret.internalEvents)
 
     implementation(apacheAvro.kafkaAvroSerializer)
     implementation(apacheAvro.kafkaStreamsAvroSerde)
