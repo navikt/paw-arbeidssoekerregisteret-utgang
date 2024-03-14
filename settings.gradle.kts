@@ -6,7 +6,8 @@ plugins {
 include(
     "utgang-pdl",
     "utgang-formidlingsgruppe",
-    "main-avro-schema-classes"
+    "main-avro-schema-classes",
+    "kafka-key-generator-client"
 )
 
 dependencyResolutionManagement {
