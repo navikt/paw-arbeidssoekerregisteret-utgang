@@ -14,10 +14,11 @@ import org.slf4j.LoggerFactory
 
 fun KStream<String, FormidlingsgruppeHendelse>.filterePaaAktivePeriode(
     stateStoreName: String,
-    prometheusMeterRegistry: PrometheusMeterRegistry
+    prometheusMeterRegistry: PrometheusMeterRegistry,
+    arbeidssoekerIdfun: (String) -> Long
 ): KStream<String, FormidlingsgruppeHendelse> {
     val processor = {
-        FormidlingsgruppeProsessor(stateStoreName, prometheusMeterRegistry)
+        FormidlingsgruppeProsessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdfun)
     }
     return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
 }
@@ -25,7 +26,7 @@ fun KStream<String, FormidlingsgruppeHendelse>.filterePaaAktivePeriode(
 class FormidlingsgruppeProsessor(
     private val stateStoreName: String,
     private val prometheusMeterRegistry: PrometheusMeterRegistry,
-    private val arbeidssoekerIdfun: (String) -> Long
+    private val arbeidssoekerIdFun: (String) -> Long
 ) : Processor<String, FormidlingsgruppeHendelse, String, FormidlingsgruppeHendelse> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
     private var context: ProcessorContext<String, FormidlingsgruppeHendelse>? = null
@@ -41,7 +42,7 @@ class FormidlingsgruppeProsessor(
     override fun process(record: Record<String, FormidlingsgruppeHendelse>?) {
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
-        val storeKey = arbeidssoekerIdfun(record.value().foedselsnummer.foedselsnummer)
+        val storeKey = arbeidssoekerIdFun(record.value().foedselsnummer.foedselsnummer)
         val ctx = requireNotNull(context) {"Context is not initialized"}
         if (store.get(storeKey) != null) {
             ctx.forward(record)

@@ -16,19 +16,21 @@ import java.util.UUID
 
 fun KStream<Long, Periode>.lagreEllerSlettPeriode(
     stateStoreName: String,
-    prometheusMeterRegistry: PrometheusMeterRegistry
+    prometheusMeterRegistry: PrometheusMeterRegistry,
+    arbeidssoekerIdFun: (String) -> Long
 ): KStream<Long, Periode> {
     val processor = {
-        PeriodeProsessor(stateStoreName, prometheusMeterRegistry)
+        PeriodeProsessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun)
     }
     return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
 }
 
 class PeriodeProsessor(
     private val stateStoreName: String,
-    private val prometheusMeterRegistry: PrometheusMeterRegistry
+    private val prometheusMeterRegistry: PrometheusMeterRegistry,
+    private val arbeidssoekerIdFun: (String) -> Long
 ) : Processor<Long, Periode, Long, Periode> {
-    private var stateStore: KeyValueStore<UUID, Periode>? = null
+    private var stateStore: KeyValueStore<Long, Periode>? = null
     private var context: ProcessorContext<Long, Periode>? = null
     private val logger = LoggerFactory.getLogger("applicationTopology")
 
@@ -44,7 +46,7 @@ class PeriodeProsessor(
 
     private fun scheduleSjekkPDLstatus(
         ctx: ProcessorContext<Long, Periode>,
-        stateStore: KeyValueStore<UUID, Periode>,
+        stateStore: KeyValueStore<Long, Periode>,
         interval: Duration = Duration.ofMinutes(10)
     ) = ctx.schedule(interval, PunctuationType.STREAM_TIME) { time ->
 
@@ -53,7 +55,7 @@ class PeriodeProsessor(
     override fun process(record: Record<Long, Periode>?) {
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
-        val storeKey = record.value().id
+        val storeKey = arbeidssoekerIdFun(record.value().identitetsnummer)
         if (record.value().avsluttet == null) {
             store.put(storeKey, record.value())
         } else {
