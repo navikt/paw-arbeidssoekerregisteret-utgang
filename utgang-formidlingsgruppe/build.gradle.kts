@@ -10,6 +10,7 @@ plugins {
 val pawUtilsVersion = "24.02.06.10-1"
 val kafkaStreamsVersion = "3.6.0"
 val arbeidssokerregisteretVersion = "1.8062260419.22-1"
+val ktorVersion = pawObservability.versions.ktor
 val jvmVersion = JavaVersion.VERSION_21
 val image: String? by project
 
@@ -34,6 +35,12 @@ dependencies {
     //Jackson
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
+
+    //ktor client
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion}")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
