@@ -3,6 +3,8 @@ package no.nav.paw.arbeidssoekerregisteret.app.vo
 import java.time.LocalDateTime
 
 data class FormidlingsgruppeHendelse (
+    // Settes før repartition så slipper vi å hente den to ganger
+    val idFraKafkaKeyGenerator: Long?,
     val foedselsnummer: Foedselsnummer,
     val personId: String,
     val personIdStatus: String,
