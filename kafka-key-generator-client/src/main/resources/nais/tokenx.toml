@@ -1,0 +1,5 @@
+name = "tokenx"
+discoveryUrl = "${ TOKEN_X_WELL_KNOWN_URL }"
+tokenEndpointUrl = "${ TOKEN_X_TOKEN_ENDPOINT }"
+clientId = "${ TOKEN_X_CLIENT_ID }"
+claims = ["Level4", "idporten-loa-high"]

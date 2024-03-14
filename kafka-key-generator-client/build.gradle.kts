@@ -10,6 +10,8 @@ dependencies {
     implementation(ktorClient.core)
     implementation(ktorClient.cio)
     implementation(jacskon.ktorSerialization)
+    implementation(navSecurity.tokenClient)
+    implementation(navCommon.tokenClient)
 }
 
 java {
