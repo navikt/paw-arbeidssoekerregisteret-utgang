@@ -1,3 +1,5 @@
+package no.nav.paw.arbeidssoekerregisteret.app
+
 object ApplicationInfo {
     private val pkg = this::class.java.`package`
     val version: String? = pkg.implementationVersion

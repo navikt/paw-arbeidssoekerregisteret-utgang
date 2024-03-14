@@ -1,7 +1,9 @@
+package no.nav.paw.arbeidssoekerregisteret.app
+
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
+import no.nav.paw.arbeidssoekerregisteret.app.ApplicationInfo
 import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.app.vo.lagreEllerSlettPeriode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -12,7 +14,6 @@ import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.Consumed
-import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
 
