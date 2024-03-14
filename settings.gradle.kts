@@ -35,6 +35,24 @@ dependencyResolutionManagement {
         val comSksamuelHopliteVersion = "2.8.0.RC3"
         val noNavCommonVersion = "3.2024.02.21_11.18-8f9b43befae1"
         val noNavSecurityVersion = "3.1.5"
+        val ktorVersion = "2.3.8"
+        create("ktorClient") {
+            library(
+                "contentNegotiation",
+                "io.ktor",
+                "ktor-client-content-negotiation"
+            ).version("2.3.8")
+            library(
+                "core",
+                "io.ktor",
+                "ktor-client-core"
+            ).version("2.3.8")
+            library(
+                "cio",
+                "io.ktor",
+                "ktor-client-cio"
+            ).version("2.3.8")
+        }
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
         }
