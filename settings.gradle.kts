@@ -27,6 +27,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         val pawUtilsVersion = "24.02.06.10-1"
+        val interneEventerVersion = "24.03.13.154-1"
         val arbeidssokerregisteretVersion = "1.8062260419.22-1"
 
         val orgApacheKafkaVersion = "3.6.0"
@@ -62,7 +63,7 @@ dependencyResolutionManagement {
                 "internalEvents",
                 "no.nav.paw.arbeidssokerregisteret.internt.schema",
                 "interne-eventer"
-            ).version(arbeidssokerregisteretVersion)
+            ).version(interneEventerVersion)
             library(
                 "apiKotlin",
                 "no.nav.paw.arbeidssokerregisteret.api.schema",
