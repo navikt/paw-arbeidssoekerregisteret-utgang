@@ -24,8 +24,134 @@ dependencyResolutionManagement {
         }
     }
     versionCatalogs {
+        val pawUtilsVersion="24.02.06.10-1"
+        val arbeidssokerregisteretVersion="1.8062260419.22-1"
+
+        val orgApacheKafkaVersion="3.6.0"
+        val orgApacheAvroVersion="1.11.3"
+        val ioConfluentKafkaVersion="7.6.0"
+        val comFasterxmlJacksonVersion="2.16.1"
+        val comSksamuelHopliteVersion="2.8.0.RC3"
+        val noNavCommonVersion="3.2024.02.21_11.18-8f9b43befae1"
+        val noNavSecurityVersion="3.1.5"
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
+        }
+        create("arbeidssoekerRegisteret") {
+            library(
+                "internalEvents",
+                "no.nav.paw.arbeidssokerregisteret.internt.schema",
+                "interne-eventer"
+            ).version(arbeidssokerregisteretVersion)
+            library(
+                "apiKotlin",
+                "no.nav.paw.arbeidssokerregisteret.api.schema",
+                "arbeidssoekerregisteret-kotlin"
+            ).version(arbeidssokerregisteretVersion)
+            library(
+                "mainAvroSchema",
+                "no.nav.paw.arbeidssokerregisteret.api",
+                "main-avro-schema"
+            ).version(arbeidssokerregisteretVersion)
+        }
+        create("pawUtils") {
+            library(
+                "kafka",
+                "no.nav.paw.kafka",
+                "kafka"
+            ).version(pawUtilsVersion)
+            library(
+                "kafkaStreams",
+                "no.nav.paw.kafka-streams",
+                "kafka-streams"
+            ).version(pawUtilsVersion)
+            library(
+                "hopliteConfig",
+                "no.nav.paw.hoplite-config",
+                "hoplite-config"
+            ).version(pawUtilsVersion)
+        }
+        create("orgApacheKafka") {
+            library(
+                "kafkaClients",
+                "org.apache.kafka",
+                "kafka-clients"
+            ).version(orgApacheKafkaVersion)
+            library(
+                "kafkaStreams",
+                "org.apache.kafka",
+                "kafka-streams"
+            ).version(orgApacheKafkaVersion)
+        }
+        create("apacheAvro") {
+            library(
+                "avro",
+                "org.apache.avro",
+                "avro"
+            ).version(orgApacheAvroVersion)
+            library(
+                "kafkaAvroSerializer",
+                "io.confluent",
+                "kafka-avro-serializer"
+            ).version(ioConfluentKafkaVersion)
+            library(
+                "kafkaStreamsAvroSerde",
+                "io.confluent",
+                "kafka-streams-avro-serde"
+            ).version(ioConfluentKafkaVersion)
+        }
+        create("jacskon") {
+            library(
+                "jacksonDatatypeJsr310",
+                "com.fasterxml.jackson.datatype",
+                "jackson-datatype-jsr310"
+            ).version(comFasterxmlJacksonVersion)
+            library(
+                "jacksonModuleKotlin",
+                "com.fasterxml.jackson.module",
+                "jackson-module-kotlin"
+            ).version(comFasterxmlJacksonVersion)
+        }
+        create("navCommon") {
+            library(
+                "tokenClient",
+                "no.nav.common",
+                "token-client"
+            ).version(noNavCommonVersion)
+            library(
+                "log",
+                "no.nav.common",
+                "log"
+            ).version(noNavCommonVersion)
+        }
+        create("navSecurity") {
+            library(
+                "tokenValidationKtorV2",
+                "no.nav.security",
+                "token-validation-ktor-v2"
+            ).version(noNavSecurityVersion)
+            library(
+                "tokenClient",
+                "no.nav.security",
+                "token-client-core"
+            ).version(noNavSecurityVersion)
+        }
+        create("hoplite") {
+            library(
+                "hopliteCore",
+                "com.sksamuel.hoplite",
+                "hoplite-core"
+            ).version(comSksamuelHopliteVersion)
+            library(
+                "hopliteToml",
+                "com.sksamuel.hoplite",
+                "hoplite-toml"
+            ).version(comSksamuelHopliteVersion)
+            library(
+                "hopliteYaml",
+                "com.sksamuel.hoplite",
+                "hoplite-yaml"
+            ).version(comSksamuelHopliteVersion)
         }
     }
 }

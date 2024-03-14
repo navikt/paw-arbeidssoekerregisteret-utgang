@@ -5,7 +5,7 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.app.ApplicationInfo
 import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelseSerde
-import no.nav.paw.arbeidssoekerregisteret.app.vo.lagreEllerSlettPeriode
+//import no.nav.paw.arbeidssoekerregisteret.app.vo.lagreEllerSlettPeriode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
@@ -46,10 +46,10 @@ fun topology(
     stateStoreName: String
 ){
     streamsBuilder.stream<Long, Periode>("v1")
-        .lagreEllerSlettPeriode(
-            stateStoreName = stateStoreName,
-            prometheusMeterRegistry = prometheusRegistry
-        )
+//        .lagreEllerSlettPeriode(
+//            stateStoreName = stateStoreName,
+//            prometheusMeterRegistry = prometheusRegistry
+//        )
     streamsBuilder
         .stream("tempnavn", Consumed.with(Serdes.String(), FormidlingsgruppeHendelseSerde()))
 }

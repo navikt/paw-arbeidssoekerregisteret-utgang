@@ -7,10 +7,6 @@ plugins {
     application
 }
 
-val pawUtilsVersion = "24.02.06.10-1"
-val kafkaStreamsVersion = "3.6.0"
-val arbeidssokerregisteretVersion = "1.8062260419.22-1"
-val ktorVersion = pawObservability.versions.ktor
 val jvmVersion = JavaVersion.VERSION_21
 val image: String? by project
 
@@ -19,27 +15,25 @@ val schema by configurations.creating {
 }
 
 dependencies {
-    schema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:$arbeidssokerregisteretVersion")
+    schema(arbeidssoekerRegisteret.mainAvroSchema)
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
-    implementation("no.nav.paw.hoplite-config:hoplite-config:$pawUtilsVersion")
 
-    // Kafka
-    implementation("no.nav.paw.kafka:kafka:$pawUtilsVersion")
-    implementation("no.nav.paw.kafka-streams:kafka-streams:$pawUtilsVersion")
-    implementation("io.confluent:kafka-avro-serializer:7.6.0")
-    implementation("io.confluent:kafka-streams-avro-serde:7.6.0")
-    implementation("org.apache.avro:avro:1.11.3")
-    implementation("org.apache.kafka:kafka-clients:$kafkaStreamsVersion")
-    implementation("org.apache.kafka:kafka-streams:$kafkaStreamsVersion")
+    implementation(pawUtils.kafkaStreams)
+    implementation(pawUtils.kafka)
+    implementation(pawUtils.hopliteConfig)
 
-    //Jackson
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.3")
+    implementation(apacheAvro.kafkaAvroSerializer)
+    implementation(apacheAvro.kafkaStreamsAvroSerde)
+    implementation(apacheAvro.avro)
+    implementation(orgApacheKafka.kafkaStreams)
+
+    implementation(jacskon.jacksonDatatypeJsr310)
+    implementation(jacskon.jacksonModuleKotlin)
 
     //ktor client
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion}")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.8")
+    implementation("io.ktor:ktor-client-core:2.3.8")
+    implementation("io.ktor:ktor-client-cio:2.3.8")
 
 }
 
