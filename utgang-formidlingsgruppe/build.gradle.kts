@@ -1,11 +1,9 @@
-import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
-
 plugins {
     kotlin("jvm")
     id("com.google.cloud.tools.jib") version "3.4.1"
-    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     application
 }
+
 val javaVersion: String by project
 val jvmVersion = JavaVersion.valueOf("VERSION_$javaVersion")
 val image: String? by project
@@ -15,7 +13,8 @@ val schema by configurations.creating {
 }
 
 dependencies {
-    schema(arbeidssoekerRegisteret.mainAvroSchema)
+    implementation(project(":kafka-key-generator-client"))
+    implementation(project(":main-avro-schema-classes"))
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
 
     implementation(pawUtils.kafkaStreams)
@@ -33,7 +32,7 @@ dependencies {
     implementation(ktorClient.contentNegotiation)
     implementation(ktorClient.core)
     implementation(ktorClient.cio)
-
+    implementation(jacskon.ktorSerialization)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -44,7 +43,7 @@ java {
 }
 
 application {
-    mainClass = "org.example.AppKt"
+    mainClass = "no.nav.paw.arbeidssoekerregisteret.app.Startup"
 }
 
 jib {
@@ -54,10 +53,6 @@ jib {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
-}
-
-tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
-    source(zipTree(schema.singleFile))
 }
 
 tasks.withType(Jar::class) {

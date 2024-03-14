@@ -43,10 +43,9 @@ class FormidlingsgruppeProsessor(
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
         val storeKey = arbeidssoekerIdFun(record.value().foedselsnummer.foedselsnummer)
-        val ctx = requireNotNull(context) {"Context is not initialized"}
+        val ctx = requireNotNull(context) { "Context is not initialized" }
         if (store.get(storeKey) != null) {
             ctx.forward(record)
-            }
         }
     }
 }
