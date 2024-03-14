@@ -3,10 +3,11 @@ plugins {
     kotlin("jvm") version "1.9.20" apply false
 }
 
-include (
-     "utgang-pdl",
-     "utgang-formidlingsgruppe"
- )
+include(
+    "utgang-pdl",
+    "utgang-formidlingsgruppe",
+    "main-avro-schema-classes"
+)
 
 dependencyResolutionManagement {
     val githubPassword: String by settings
@@ -24,16 +25,16 @@ dependencyResolutionManagement {
         }
     }
     versionCatalogs {
-        val pawUtilsVersion="24.02.06.10-1"
-        val arbeidssokerregisteretVersion="1.8062260419.22-1"
+        val pawUtilsVersion = "24.02.06.10-1"
+        val arbeidssokerregisteretVersion = "1.8062260419.22-1"
 
-        val orgApacheKafkaVersion="3.6.0"
-        val orgApacheAvroVersion="1.11.3"
-        val ioConfluentKafkaVersion="7.6.0"
-        val comFasterxmlJacksonVersion="2.16.1"
-        val comSksamuelHopliteVersion="2.8.0.RC3"
-        val noNavCommonVersion="3.2024.02.21_11.18-8f9b43befae1"
-        val noNavSecurityVersion="3.1.5"
+        val orgApacheKafkaVersion = "3.6.0"
+        val orgApacheAvroVersion = "1.11.3"
+        val ioConfluentKafkaVersion = "7.6.0"
+        val comFasterxmlJacksonVersion = "2.16.1"
+        val comSksamuelHopliteVersion = "2.8.0.RC3"
+        val noNavCommonVersion = "3.2024.02.21_11.18-8f9b43befae1"
+        val noNavSecurityVersion = "3.1.5"
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
         }
