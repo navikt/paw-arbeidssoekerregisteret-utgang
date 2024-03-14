@@ -1,0 +1,51 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/pdl"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "data": {
+        "hentPerson": {
+          "foedsel": [
+            {
+              "foedselsdato": "1986-11-26",
+              "foedselsaar": "1986"
+            }
+          ],
+          "opphold": [
+            {
+              "oppholdFra": "2010-01-20",
+              "oppholdTil": "2022-01-20",
+              "type": "PERMANENT"
+            }
+          ],
+          "folkeregisterpersonstatus": [
+            {
+              "forenkletStatus": "bosattEtterFolkeregisterloven"
+            }
+          ],
+          "bostedsadresse": [
+            {
+              "angittFlyttedato": "2010-01-20",
+              "gyldigFraOgMed": "2010-01-20",
+              "gyldigTilOgMed": "2022-01-20",
+              "vegadresse": {
+                "kommunenummer": "0301"
+              },
+              "matrikkeladresse": null,
+              "ukjentBosted" : null,
+              "utenlandskAdresse": null
+            }
+          ],
+          "innflyttingTilNorge": [],
+          "utflyttingFraNorge": []
+        }
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
