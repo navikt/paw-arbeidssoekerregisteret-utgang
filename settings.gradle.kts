@@ -37,23 +37,23 @@ dependencyResolutionManagement {
         val comSksamuelHopliteVersion = "2.8.0.RC3"
         val noNavCommonVersion = "3.2024.02.21_11.18-8f9b43befae1"
         val noNavSecurityVersion = "3.1.5"
-        val ktorVersion = "2.3.8"
+        val ktorVersion = "2.3.9"
         create("ktorClient") {
             library(
                 "contentNegotiation",
                 "io.ktor",
                 "ktor-client-content-negotiation"
-            ).version("2.3.8")
+            ).version(ktorVersion)
             library(
                 "core",
                 "io.ktor",
                 "ktor-client-core"
-            ).version("2.3.8")
+            ).version(ktorVersion)
             library(
                 "cio",
                 "io.ktor",
                 "ktor-client-cio"
-            ).version("2.3.8")
+            ).version(ktorVersion)
         }
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
@@ -102,6 +102,11 @@ dependencyResolutionManagement {
                 "kafkaStreams",
                 "org.apache.kafka",
                 "kafka-streams"
+            ).version(orgApacheKafkaVersion)
+            library(
+                "streamsTest",
+                "org.apache.kafka",
+                "kafka-streams-test-utils"
             ).version(orgApacheKafkaVersion)
         }
         create("apacheAvro") {
