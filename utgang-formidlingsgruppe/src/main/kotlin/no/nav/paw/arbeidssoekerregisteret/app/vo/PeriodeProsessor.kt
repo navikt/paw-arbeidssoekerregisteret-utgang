@@ -32,24 +32,11 @@ class PeriodeProsessor(
 ) : Processor<Long, Periode, Long, Periode> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
     private var context: ProcessorContext<Long, Periode>? = null
-    private val logger = LoggerFactory.getLogger("applicationTopology")
 
     override fun init(context: ProcessorContext<Long, Periode>?) {
         super.init(context)
         this.context = context
         stateStore = context?.getStateStore(stateStoreName)
-        scheduleSjekkPDLstatus(
-            requireNotNull(context) { "Context is not initialized" },
-            requireNotNull(stateStore) { "State store is not initialized" }
-        )
-    }
-
-    private fun scheduleSjekkPDLstatus(
-        ctx: ProcessorContext<Long, Periode>,
-        stateStore: KeyValueStore<Long, Periode>,
-        interval: Duration = Duration.ofMinutes(10)
-    ) = ctx.schedule(interval, PunctuationType.STREAM_TIME) { time ->
-
     }
 
     override fun process(record: Record<Long, Periode>?) {
