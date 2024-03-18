@@ -56,11 +56,6 @@ dependencyResolutionManagement {
                 "io.ktor",
                 "ktor-client-cio"
             ).version(ktorVersion)
-            library(
-                "serializationJackson",
-                "io.ktor",
-                "ktor-serialization-jackson"
-            ).version(ktorVersion)
         }
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
