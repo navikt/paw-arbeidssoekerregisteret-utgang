@@ -1,0 +1,4 @@
+brokers = "localhost:9092"
+applicationIdPrefix = "v1"
+[schemaRegistry]
+url = "http://localhost:8082"

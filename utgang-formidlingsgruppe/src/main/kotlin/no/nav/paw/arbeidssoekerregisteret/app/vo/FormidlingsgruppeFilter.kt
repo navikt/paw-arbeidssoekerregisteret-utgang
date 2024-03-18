@@ -25,7 +25,7 @@ fun KStream<Long, FormidlingsgruppeHendelse>.filterePaaAktivePeriode(
     val processor = {
         FormidlingsgruppeFilter(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdfun)
     }
-    return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
+    return process(processor, Named.`as`("filterAktivePerioder"), stateStoreName)
 }
 
 class FormidlingsgruppeFilter(

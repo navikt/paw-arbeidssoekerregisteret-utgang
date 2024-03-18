@@ -14,9 +14,7 @@ import org.apache.kafka.common.serialization.Serializer
 class FormidlingsgruppeHendelseSerde: Serde<FormidlingsgruppeHendelse> {
     override fun serializer() = FormidlingsgruppeHendelseSerializer()
 
-    override fun deserializer(): Deserializer<FormidlingsgruppeHendelse> {
-        TODO("Not yet implemented")
-    }
+    override fun deserializer(): Deserializer<FormidlingsgruppeHendelse> = FormidlingsgruppeHendelseDeserializer()
 }
 
 class FormidlingsgruppeHendelseSerializer() : Serializer<FormidlingsgruppeHendelse> {

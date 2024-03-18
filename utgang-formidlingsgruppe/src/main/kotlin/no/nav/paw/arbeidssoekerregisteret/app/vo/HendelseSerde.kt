@@ -16,9 +16,7 @@ import org.apache.kafka.common.serialization.Serializer
 class HendelseSerde: Serde<Avsluttet> {
     override fun serializer() = HendelseSerializer()
 
-    override fun deserializer(): Deserializer<Avsluttet> {
-        TODO("Not yet implemented")
-    }
+    override fun deserializer(): Deserializer<Avsluttet> = HendelseSerializerDeserializer()
 }
 
 class HendelseSerializer() : Serializer<Avsluttet> {

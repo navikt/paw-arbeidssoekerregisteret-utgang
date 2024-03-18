@@ -8,13 +8,14 @@ import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 
 fun <K, V> KStream<K, V>.genericProcess(
+    name: String,
     vararg stateStoreNames: String,
     function: ProcessorContext<K, V>.(Record<K, V>) -> Unit
 ): KStream<K, V> {
     val processor = {
         GenericProcessor(function)
     }
-    return process(processor, Named.`as`("periodeProsessor"), *stateStoreNames)
+    return process(processor, Named.`as`(name), *stateStoreNames)
 }
 
 class GenericProcessor<K,V>(

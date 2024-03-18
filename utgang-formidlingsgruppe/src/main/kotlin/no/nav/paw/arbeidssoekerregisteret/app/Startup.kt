@@ -1,10 +1,13 @@
 package no.nav.paw.arbeidssoekerregisteret.app
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+import io.micrometer.core.instrument.binder.kafka.KafkaStreamsMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.app.vo.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.arbeidssokerregisteret.app.helse.Helse
+import no.nav.paw.arbeidssokerregisteret.app.helse.initKtor
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
@@ -19,12 +22,21 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
+import no.nav.paw.kafkakeygenerator.auth.NaisEnv
+import no.nav.paw.kafkakeygenerator.auth.currentNaisEnv
+import org.apache.kafka.streams.KafkaStreams
+import org.apache.kafka.streams.StreamsConfig
+import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.Repartitioned
 import java.time.Instant
 import java.util.*
 
 const val partitionCount: Int = 6
+
+const val periodeTopic = "paw.arbeidssokerperioder-beta-v14"
+const val hendelsesLogTopic = "paw.formidlingsgruppetopic-beta-v1"
+fun formidlingsGruppeTopic(env: NaisEnv) = "teamarenanais.aapen-arena-formidlingsgruppeendret-v1-${if (env == NaisEnv.ProdGCP) "p" else "q"}"
 
 fun main() {
     val logger = LoggerFactory.getLogger("app")
@@ -44,53 +56,27 @@ fun main() {
                 streamsConfig.createSpecificAvroSerde()
             )
         )
+    val topology = streamsBuilder.appTopology(
+        prometheusMeterRegistry,
+        "aktivePerioder",
+        idAndRecordKeyFunction,
+        periodeTopic,
+        formidlingsGruppeTopic(currentNaisEnv),
+        hendelsesLogTopic
+    )
+    val kafkaStreams = KafkaStreams(
+        topology,
+        StreamsConfig(streamsConfig.properties)
+    )
+    kafkaStreams.setUncaughtExceptionHandler { throwable ->
+        logger.error("Uventet feil: ${throwable.message}", throwable)
+        StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
+    }
+    initKtor(
+        kafkaStreamsMetrics = KafkaStreamsMetrics(kafkaStreams),
+        prometheusRegistry = prometheusMeterRegistry,
+        helse = Helse(kafkaStreams)
+    ).start(wait = true)
+    logger.info("Avsluttet")
 }
 
-fun topology(
-    streamsBuilder: StreamsBuilder,
-    prometheusRegistry: PrometheusMeterRegistry,
-    stateStoreName: String,
-    idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
-    periodeTopic: String,
-    formidlingsgrupperTopic: String,
-    hendelseLoggTopic: String
-) {
-    streamsBuilder.stream<Long, Periode>(periodeTopic)
-        .lagreEllerSlettPeriode(
-            stateStoreName = stateStoreName,
-            prometheusMeterRegistry = prometheusRegistry,
-            arbeidssoekerIdFun = idAndRecordKeyFunction
-        )
-
-    streamsBuilder
-        .stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), FormidlingsgruppeHendelseSerde()))
-        .filter { _, value ->
-            value.formidlingsgruppe.kode.equals("ISERV", ignoreCase = true)
-        }
-        .map { key, value ->
-            val (id, newKey) = idAndRecordKeyFunction(value.foedselsnummer.foedselsnummer)
-            KeyValue(newKey, value.copy(idFraKafkaKeyGenerator = id))
-        }
-        .repartition(Repartitioned.numberOfPartitions(partitionCount))
-        .filterePaaAktivePeriode(stateStoreName,
-            prometheusRegistry,
-            idAndRecordKeyFunction)
-        .mapValues {_, value ->
-            Avsluttet(
-                hendelseId = UUID.randomUUID(),
-                id = requireNotNull(value.idFraKafkaKeyGenerator) { "idFraKafkaKeyGenerator is null" },
-                identitetsnummer = value.foedselsnummer.foedselsnummer,
-                metadata = Metadata(
-                    tidspunkt = Instant.now(),
-                    aarsak = "Formidlingsgruppe endret til ${value.formidlingsgruppe.kode}",
-                    kilde = "Arena formidlingsgruppetopic",
-                    utfoertAv = Bruker(
-                        type = BrukerType.SYSTEM,
-                        id = ApplicationInfo.id
-                    )
-                )
-            )
-        }.genericProcess { record ->
-            record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli())
-        }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
-}
