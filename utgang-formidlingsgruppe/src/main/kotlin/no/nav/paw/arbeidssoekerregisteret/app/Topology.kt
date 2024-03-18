@@ -25,6 +25,7 @@ fun StreamsBuilder.appTopology(
     formidlingsgrupperTopic: String,
     hendelseLoggTopic: String
 ): Topology {
+    val formidlingsgruppeHendelseSerde = FormidlingsgruppeHendelseSerde()
     stream<Long, Periode>(periodeTopic)
         .lagreEllerSlettPeriode(
             stateStoreName = stateStoreName,
@@ -32,7 +33,7 @@ fun StreamsBuilder.appTopology(
             arbeidssoekerIdFun = idAndRecordKeyFunction
         )
 
-    stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), FormidlingsgruppeHendelseSerde()))
+    stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
         .filter { _, value ->
             value.formidlingsgruppe.kode.equals("ISERV", ignoreCase = true)
         }
@@ -40,7 +41,12 @@ fun StreamsBuilder.appTopology(
             val (id, newKey) = idAndRecordKeyFunction(value.foedselsnummer.foedselsnummer)
             KeyValue(newKey, value.copy(idFraKafkaKeyGenerator = id))
         }
-        .repartition(Repartitioned.numberOfPartitions(partitionCount))
+        .repartition(
+            Repartitioned
+                .numberOfPartitions<Long?, FormidlingsgruppeHendelse?>(partitionCount)
+                .withKeySerde(Serdes.Long())
+                .withValueSerde(formidlingsgruppeHendelseSerde)
+        )
         .filterePaaAktivePeriode(
             stateStoreName,
             prometheusRegistry,
@@ -62,7 +68,7 @@ fun StreamsBuilder.appTopology(
                 )
             )
         }.genericProcess("setRecordTimestamp") { record ->
-            record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli())
+            forward(record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli()))
         }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
 
     return build()

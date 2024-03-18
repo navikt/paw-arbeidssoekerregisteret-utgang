@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.ZoneOffset
 import java.time.Duration.*
+import java.time.ZoneId
 
 
 fun KStream<Long, FormidlingsgruppeHendelse>.filterePaaAktivePeriode(
@@ -53,7 +54,7 @@ class FormidlingsgruppeFilter(
                 record.value().foedselsnummer.foedselsnummer
             ).id
         val periodeStartTime = store.get(storeKey)?.startet?.tidspunkt
-        val requestedStopTime = record.value().formidlingsgruppeEndret.toInstant(ZoneOffset.of(ZoneOffset.systemDefault().id))
+        val requestedStopTime = record.value().formidlingsgruppeEndret.atZone(ZoneId.of("Europe/Oslo")).toInstant()
         val diffStartTilStopp = between(periodeStartTime, requestedStopTime)
         val resultat = when {
             periodeStartTime == null -> FilterResultat.INGEN_PERIODE
