@@ -1,4 +1,4 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl.helse
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse
 
 import io.ktor.http.HttpStatusCode
 import org.apache.kafka.streams.KafkaStreams

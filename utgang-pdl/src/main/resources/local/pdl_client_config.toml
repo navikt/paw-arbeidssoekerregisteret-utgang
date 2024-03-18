@@ -1,0 +1,3 @@
+url = "http://localhost:8090/pdl"
+tema = "OPP"
+scope = "test_scope"

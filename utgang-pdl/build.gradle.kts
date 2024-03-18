@@ -34,11 +34,14 @@ dependencies {
 
     implementation(jacskon.jacksonDatatypeJsr310)
     implementation(jacskon.jacksonModuleKotlin)
+    implementation(jacskon.ktorSerialization)
 
     implementation(ktorClient.contentNegotiation)
     implementation(ktorClient.core)
     implementation(ktorClient.cio)
-    implementation(ktorClient.serializationJackson)
+
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.0")
+    testImplementation(orgApacheKafka.streamsTest)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

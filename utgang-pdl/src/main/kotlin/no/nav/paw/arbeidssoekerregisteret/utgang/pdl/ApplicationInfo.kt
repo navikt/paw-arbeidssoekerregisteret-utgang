@@ -1,4 +1,4 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 
 object ApplicationInfo {
     private val pkg = this::class.java.`package`

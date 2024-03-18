@@ -1,4 +1,4 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl.clients
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients
 
 import kotlinx.coroutines.runBlocking
 

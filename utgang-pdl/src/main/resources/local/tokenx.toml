@@ -1,0 +1,5 @@
+name = "tokenx"
+discoveryUrl = "http://localhost:8081/default/.well-known/openid-configuration"
+tokenEndpointUrl = "http://localhost:8081/default/token"
+clientId = "paw-arbeidssoekeregisteret-utgang-pdl"
+claims = []

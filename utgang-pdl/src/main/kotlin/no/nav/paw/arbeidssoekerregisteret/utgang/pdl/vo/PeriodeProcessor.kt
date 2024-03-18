@@ -1,12 +1,16 @@
 package no.nav.paw.arbeidssoekerregisteret.app.vo
 
-// noe skrive feil i pathen her, det står no.naw.arbeids... CWM støtter ikke endring av mapper :(
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
+import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
+import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
+import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
 import no.nav.paw.pdl.PdlClient
 import no.nav.paw.pdl.hentPerson
-import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.ApplicationInfo
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Named
 import org.apache.kafka.streams.processor.PunctuationType
@@ -16,6 +20,7 @@ import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 fun KStream<Long, Periode>.lagreEllerSlettPeriode(
@@ -23,30 +28,32 @@ fun KStream<Long, Periode>.lagreEllerSlettPeriode(
     prometheusMeterRegistry: PrometheusMeterRegistry,
     arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
     pdlClient: PdlClient
-): KStream<Long, Periode> {
+): KStream<Long, Avsluttet> {
     val processor = {
-        PeriodeProsessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlClient)
+        PeriodeProcessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlClient)
     }
     return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
 }
 
-class PeriodeProsessor(
+class PeriodeProcessor(
     private val stateStoreName: String,
     private val prometheusMeterRegistry: PrometheusMeterRegistry,
     private val arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
     private val pdlClient: PdlClient
-) : Processor<Long, Periode, Long, Periode> {
+) : Processor<Long, Periode, Long, Avsluttet> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
-    private var context: ProcessorContext<Long, Periode>? = null
+    private var context: ProcessorContext<Long, Avsluttet>? = null
     private val logger = LoggerFactory.getLogger("periodeProsessor")
 
-    override fun init(context: ProcessorContext<Long, Periode>?) {
+    override fun init(context: ProcessorContext<Long, Avsluttet>?) {
         super.init(context)
         this.context = context
         stateStore = context?.getStateStore(stateStoreName)
         scheduleAvsluttPerioder(
             requireNotNull(context),
-            requireNotNull(stateStore)
+            requireNotNull(stateStore),
+            Duration.ofDays(1),
+            arbeidssoekerIdFun
         )
     }
 
@@ -62,9 +69,10 @@ class PeriodeProsessor(
     }
 
     private fun scheduleAvsluttPerioder(
-        ctx: ProcessorContext<Long, Periode>,
+        ctx: ProcessorContext<Long, Avsluttet>,
         stateStore: KeyValueStore<Long, Periode>,
-        interval: Duration = Duration.ofDays(1)
+        interval: Duration = Duration.ofDays(1),
+        idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction
     ) = ctx.schedule(interval, PunctuationType.WALL_CLOCK_TIME) {
         try {
             stateStore.all().forEachRemaining { keyValue ->
@@ -81,7 +89,28 @@ class PeriodeProsessor(
                     return@forEachRemaining
                 }
                 if (result.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
-                    val record = Record(keyValue.key, keyValue.value, keyValue.value.avsluttet.tidspunkt.toEpochMilli())
+                    val aarsaker =
+                        result.folkeregisterpersonstatus.joinToString(separator = ", ") { it.forenkletStatus }
+
+                    val (id, newKey) = idAndRecordKeyFunction(periode.identitetsnummer)
+                    val avsluttetHendelse =
+                        Avsluttet(
+                            hendelseId = UUID.randomUUID(),
+                            id = id,
+                            identitetsnummer = periode.identitetsnummer,
+                            metadata = Metadata(
+                                tidspunkt = Instant.now(),
+                                aarsak = "Periode stoppet pga. $aarsaker",
+                                kilde = "PDL-utgang",
+                                utfoertAv = Bruker(
+                                    type = BrukerType.SYSTEM,
+                                    id = ApplicationInfo.id
+                                )
+                            )
+                        )
+
+                    val record =
+                        Record(newKey, avsluttetHendelse, avsluttetHendelse.metadata.tidspunkt.toEpochMilli())
                     ctx.forward(record)
                 }
             }

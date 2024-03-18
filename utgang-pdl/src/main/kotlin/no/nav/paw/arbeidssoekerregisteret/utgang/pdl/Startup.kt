@@ -1,4 +1,4 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.core.instrument.binder.kafka.KafkaStreamsMetrics
@@ -8,12 +8,12 @@ import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
-import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
-import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.createPdlClient
-import no.naw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
-import no.naw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
-import no.naw.arbeidssoekerregisteret.utgang.pdl.helse.Helse
-import no.naw.arbeidssoekerregisteret.utgang.pdl.helse.initKtor
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createPdlClient
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse.Helse
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse.initKtor
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder

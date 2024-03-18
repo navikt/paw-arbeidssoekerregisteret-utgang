@@ -1,2 +1,2 @@
-tokenEndpointUrl = "${AZURE_OPENID_CONFIG_TOKEN_ENDPOINT}"
-clientId = "${AZURE_APP_CLIENT_ID}"
+tokenEndpointUrl = "http://localhost:8081/default/token"
+clientId = "paw-arbeidssoekerregisteret-utgang-pdl"

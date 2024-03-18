@@ -1,12 +1,12 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl.clients
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients
 
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.kafkakeygenerator.auth.AuthProvider
 import no.nav.paw.kafkakeygenerator.auth.azureAdM2MTokenClient
 import no.nav.paw.kafkakeygenerator.auth.currentNaisEnv
 import no.nav.paw.pdl.PdlClient
-import no.naw.arbeidssoekerregisteret.utgang.pdl.config.PDL_CONFIG_FILE
-import no.naw.arbeidssoekerregisteret.utgang.pdl.config.PdlConfig
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.PDL_CONFIG_FILE
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.PdlConfig
 
 fun createPdlClient(): PdlClient {
     val naisEnv = currentNaisEnv

@@ -1,4 +1,4 @@
-package no.naw.arbeidssoekerregisteret.utgang.pdl.clients
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients
 
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.kafkakeygenerator.auth.AuthProvider
