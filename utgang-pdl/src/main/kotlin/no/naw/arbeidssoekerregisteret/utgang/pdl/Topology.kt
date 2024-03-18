@@ -7,8 +7,10 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
+import no.nav.paw.pdl.PdlClient
 import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
 import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Produced
@@ -19,6 +21,7 @@ fun StreamsBuilder.appTopology(
     prometheusRegistry: PrometheusMeterRegistry,
     stateStoreName: String,
     idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
+    pdlClient: PdlClient,
     periodeTopic: String,
     hendelseLoggTopic: String
 ): Topology {
@@ -26,27 +29,29 @@ fun StreamsBuilder.appTopology(
         .lagreEllerSlettPeriode(
             stateStoreName = stateStoreName,
             prometheusMeterRegistry = prometheusRegistry,
-            arbeidssoekerIdFun = idAndRecordKeyFunction
+            arbeidssoekerIdFun = idAndRecordKeyFunction,
+            pdlClient = pdlClient
         )
+        .map { _, value ->
+            val (id, newKey) = idAndRecordKeyFunction(value.identitetsnummer)
 
-        // Schedulert oppgave som kjører daglig for å avslutte aktive perioder
-        .mapValues { _, value ->
-            Avsluttet(
-                hendelseId = UUID.randomUUID(),
-                id = requireNotNull(value.idFraKafkaKeyGenerator) { "idFraKafkaKeyGenerator is null" },
-                identitetsnummer = value.foedselsnummer.foedselsnummer,
-                metadata = Metadata(
-                    tidspunkt = Instant.now(),
-                    aarsak = "Formidlingsgruppe endret til ${value.formidlingsgruppe.kode}",
-                    kilde = "Arena formidlingsgruppetopic",
-                    utfoertAv = Bruker(
-                        type = BrukerType.SYSTEM,
-                        id = ApplicationInfo.id
+            KeyValue(
+                newKey,
+                Avsluttet(
+                    hendelseId = UUID.randomUUID(),
+                    id = id,
+                    identitetsnummer = value.identitetsnummer,
+                    metadata = Metadata(
+                        tidspunkt = Instant.now(),
+                        aarsak = "PDL 'forenkletStatus' endret til ....",
+                        kilde = "PDL-utgang",
+                        utfoertAv = Bruker(
+                            type = BrukerType.SYSTEM,
+                            id = ApplicationInfo.id
+                        )
                     )
                 )
             )
-        }.genericProcess("setRecordTimestamp") { record ->
-            record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli())
         }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
 
     return build()

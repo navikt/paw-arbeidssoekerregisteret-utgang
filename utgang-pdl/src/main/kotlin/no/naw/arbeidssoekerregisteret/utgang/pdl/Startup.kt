@@ -9,6 +9,7 @@ import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
+import no.naw.arbeidssoekerregisteret.utgang.pdl.clients.createPdlClient
 import no.naw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
 import no.naw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
 import no.naw.arbeidssoekerregisteret.utgang.pdl.helse.Helse
@@ -33,6 +34,7 @@ fun main() {
     val applicationConfiguration = loadNaisOrLocalConfiguration<ApplicationConfiguration>(APPLICATION_CONFIG_FILE)
 
     val idAndRecordKeyFunction = createIdAndRecordKeyFunction()
+    val pdlClient = createPdlClient()
     val streamsConfig = KafkaStreamsFactory(applicationConfiguration.applicationIdSuffix, kafkaConfig)
         .withDefaultKeySerde(Serdes.LongSerde::class)
         .withDefaultValueSerde(SpecificAvroSerde::class)
@@ -49,6 +51,7 @@ fun main() {
         prometheusMeterRegistry,
         "aktivePerioder",
         idAndRecordKeyFunction,
+        pdlClient,
         periodeTopic,
         hendelsesLogTopic
     )
@@ -56,6 +59,7 @@ fun main() {
         topology,
         StreamsConfig(streamsConfig.properties)
     )
+
     kafkaStreams.setUncaughtExceptionHandler { throwable ->
         logger.error("Uventet feil: ${throwable.message}", throwable)
         StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
