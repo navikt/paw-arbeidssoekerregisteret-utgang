@@ -1,0 +1,4 @@
+periodeTopic = "paw.arbeidssokerperioder-beta-v14"
+hendelseloggTopic = "arbeidssoker-hendelseslogg-beta-v14"
+applicationIdSuffix = "v14"
+aktivePerioderStateStoreName = "aktivePerioder"
