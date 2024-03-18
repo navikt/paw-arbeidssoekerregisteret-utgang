@@ -27,6 +27,8 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         val pawUtilsVersion = "24.02.06.10-1"
+        val pawPdlClientVersion = "24.03.09.27-1"
+        val pawAaregClientVersion = "24.01.12.16-1"
         val interneEventerVersion = "24.03.13.154-1"
         val arbeidssokerregisteretVersion = "1.8062260419.22-1"
 
@@ -54,9 +56,26 @@ dependencyResolutionManagement {
                 "io.ktor",
                 "ktor-client-cio"
             ).version(ktorVersion)
+            library(
+                "serializationJackson",
+                "io.ktor",
+                "ktor-serialization-jackson"
+            ).version(ktorVersion)
         }
         create("pawObservability") {
             from("no.nav.paw.observability:observability-version-catalog:24.03.05.11-1")
+        }
+        create("pawClients") {
+            library(
+                "pawPdlClient",
+                "no.nav.paw",
+                "pdl-client"
+            ).version(pawPdlClientVersion)
+            library(
+                "pawAaregClient",
+                "no.nav.paw",
+                "aareg-client"
+            ).version(pawAaregClientVersion)
         }
         create("arbeidssoekerRegisteret") {
             library(
