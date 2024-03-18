@@ -16,19 +16,18 @@ import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.nav.paw.kafkakeygenerator.auth.NaisEnv
+import no.nav.paw.kafkakeygenerator.client.KafkaKeysClient
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Time
-import org.apache.kafka.streams.StreamsBuilder
-import org.apache.kafka.streams.TestInputTopic
-import org.apache.kafka.streams.TestOutputTopic
-import org.apache.kafka.streams.TopologyTestDriver
+import org.apache.kafka.streams.*
 import org.apache.kafka.streams.state.KeyValueStore
 import org.apache.kafka.streams.state.internals.InMemoryKeyValueBytesStoreSupplier
 import org.apache.kafka.streams.state.internals.KeyValueStoreBuilder
 import java.time.Period
+import java.util.*
 
 
 data class TestScope(
@@ -36,7 +35,8 @@ data class TestScope(
     val formidlingsgruppeTopic: TestInputTopic<String, FormidlingsgruppeHendelse>,
     val hendelseloggTopic: TestOutputTopic<Long, Avsluttet>,
     val kevValueStore: KeyValueStore<Long, Period>,
-    val topologyTestDriver: TopologyTestDriver
+    val topologyTestDriver: TopologyTestDriver,
+    val kafkaKeysClient: KafkaIdAndRecordKeyFunction
 )
 
 fun testScope(): TestScope {
@@ -64,10 +64,6 @@ fun testScope(): TestScope {
                 Time.SYSTEM
             )
         )
-    val kafkaConfig: KafkaConfig = loadNaisOrLocalConfiguration(KAFKA_CONFIG_WITH_SCHEME_REG)
-    val kafkaStreamsFactory = KafkaStreamsFactory("test", kafkaConfig)
-        .withDefaultKeySerde(Serdes.Long()::class)
-        .withDefaultValueSerde(SpecificAvroSerde::class)
 
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
@@ -78,8 +74,9 @@ fun testScope(): TestScope {
             idAndRecordKeyFunction = idAndRecordKeyFunction,
             prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         ),
-        kafkaStreamsFactory.properties
+        kafkaStreamProperties
     )
+
     val periodeInputTopic = testDriver.createInputTopic(
         periodeTopic,
         Serdes.Long().serializer(),
@@ -100,12 +97,14 @@ fun testScope(): TestScope {
         formidlingsgruppeTopic = formidlingsgruppeInputTopic,
         hendelseloggTopic = hendelseOutputTopic,
         kevValueStore = testDriver.getKeyValueStore(stateStoreName),
-        topologyTestDriver = testDriver
+        topologyTestDriver = testDriver,
+        kafkaKeysClient = idAndRecordKeyFunction
     )
 }
 
+const val SCHEMA_REGISTRY_SCOPE = "mock"
 inline fun <reified T : SpecificRecord> createAvroSerde(): Serde<T> {
-    val SCHEMA_REGISTRY_SCOPE = "mock"
+
     return SpecificAvroSerde<T>(MockSchemaRegistry.getClientForScope(SCHEMA_REGISTRY_SCOPE)).apply {
         configure(
             mapOf(
@@ -115,4 +114,13 @@ inline fun <reified T : SpecificRecord> createAvroSerde(): Serde<T> {
             false
         )
     }
+}
+
+val kafkaStreamProperties = Properties().apply {
+    this[StreamsConfig.APPLICATION_ID_CONFIG] = "test"
+    this[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "dummy:1234"
+    this[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.Long().javaClass
+    this[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = SpecificAvroSerde<SpecificRecord>().javaClass
+    this[KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS] = "true"
+    this[KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG] = "mock://$SCHEMA_REGISTRY_SCOPE"
 }
