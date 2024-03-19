@@ -1,9 +1,10 @@
-package no.nav.paw.arbeidssoekerregisteret.app.vo
+package no.nav.paw.arbeidssoekerregisteret.app.functions
 
 
 import io.micrometer.core.instrument.Tag
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.app.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Named
@@ -13,7 +14,6 @@ import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.ZoneOffset
 import java.time.Duration.*
 import java.time.ZoneId
 

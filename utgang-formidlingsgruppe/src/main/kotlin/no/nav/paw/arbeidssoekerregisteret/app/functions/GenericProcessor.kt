@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.app.vo
+package no.nav.paw.arbeidssoekerregisteret.app.functions
 
 
 import org.apache.kafka.streams.kstream.KStream

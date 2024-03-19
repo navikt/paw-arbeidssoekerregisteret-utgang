@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.app.vo
+package no.nav.paw.arbeidssoekerregisteret.app.functions
 
 
 import io.micrometer.prometheus.PrometheusMeterRegistry
@@ -6,13 +6,10 @@ import no.nav.paw.arbeidssoekerregisteret.app.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Named
-import org.apache.kafka.streams.processor.PunctuationType
 import org.apache.kafka.streams.processor.api.Processor
 import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
-import org.slf4j.LoggerFactory
-import java.time.Duration
 
 fun KStream<Long, Periode>.lagreEllerSlettPeriode(
     stateStoreName: String,
