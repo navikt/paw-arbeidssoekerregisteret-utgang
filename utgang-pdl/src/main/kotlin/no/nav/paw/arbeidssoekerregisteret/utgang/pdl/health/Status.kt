@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health
 
 import io.ktor.http.HttpStatusCode
 

@@ -12,8 +12,8 @@ import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse.Helse
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse.initKtor
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health.Health
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health.initKtor
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder
@@ -66,7 +66,7 @@ fun main() {
     initKtor(
         kafkaStreamsMetrics = KafkaStreamsMetrics(kafkaStreams),
         prometheusRegistry = prometheusMeterRegistry,
-        helse = Helse(kafkaStreams)
+        health = Health(kafkaStreams)
     ).start(wait = true)
     logger.info("Avsluttet")
 }

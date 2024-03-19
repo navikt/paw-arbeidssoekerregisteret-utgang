@@ -11,17 +11,6 @@ import no.nav.paw.pdl.PdlClient
 import no.nav.paw.pdl.graphql.generated.hentperson.Person
 import no.nav.paw.pdl.hentPerson
 
-fun createPdlClient(): PdlClient {
-    val naisEnv = currentNaisEnv
-    val azureM2MConfig = loadNaisOrLocalConfiguration<AzureM2MConfig>("azure_m2m.toml")
-    val m2mTokenClient = azureAdM2MTokenClient(naisEnv, azureM2MConfig)
-    val pdlConfig = loadNaisOrLocalConfiguration<PdlConfig>(PDL_CONFIG_FILE)
-
-    return PdlClient(pdlConfig.url, pdlConfig.tema, createHttpClient()) {
-        m2mTokenClient.createMachineToMachineToken(pdlConfig.scope)
-    }
-}
-
 fun interface PdlHentPerson {
     fun hentPerson(ident: String, callId: String, navConsumerId: String): Person?
 
@@ -34,5 +23,15 @@ fun interface PdlHentPerson {
                 }
             }
         }
+    }
+}
+private fun createPdlClient(): PdlClient {
+    val naisEnv = currentNaisEnv
+    val azureM2MConfig = loadNaisOrLocalConfiguration<AzureM2MConfig>("azure_m2m.toml")
+    val m2mTokenClient = azureAdM2MTokenClient(naisEnv, azureM2MConfig)
+    val pdlConfig = loadNaisOrLocalConfiguration<PdlConfig>(PDL_CONFIG_FILE)
+
+    return PdlClient(pdlConfig.url, pdlConfig.tema, createHttpClient()) {
+        m2mTokenClient.createMachineToMachineToken(pdlConfig.scope)
     }
 }

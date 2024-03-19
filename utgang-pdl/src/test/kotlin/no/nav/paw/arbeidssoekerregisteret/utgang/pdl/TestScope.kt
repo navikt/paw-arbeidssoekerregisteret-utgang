@@ -6,7 +6,7 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
-import no.nav.paw.arbeidssoekerregisteret.app.vo.HendelseSerde
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.IdAndRecordKey
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode

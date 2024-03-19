@@ -1,19 +1,16 @@
-package no.nav.paw.arbeidssoekerregisteret.app.vo
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
-import no.nav.paw.arbeidssokerregisteret.intern.v1.Hendelse
-import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serializer
 
-class HendelseSerde: Serde<Avsluttet> {
+class HendelseSerde : Serde<Avsluttet> {
     override fun serializer() = HendelseSerializer()
 
     override fun deserializer(): Deserializer<Avsluttet> = HendelseSerializerDeserializer()
@@ -25,7 +22,7 @@ class HendelseSerializer() : Serializer<Avsluttet> {
     }
 }
 
-class HendelseSerializerDeserializer(): Deserializer<Avsluttet> {
+class HendelseSerializerDeserializer() : Deserializer<Avsluttet> {
     override fun deserialize(topic: String?, data: ByteArray?): Avsluttet? {
         return hendelseObjectMapper.readValue(data, Avsluttet::class.java)
     }

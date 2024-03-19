@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health
 
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -18,7 +18,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 fun initKtor(
     kafkaStreamsMetrics: KafkaStreamsMetrics,
     prometheusRegistry: PrometheusMeterRegistry,
-    helse: Helse
+    health: Health
 ): ApplicationEngine {
     return embeddedServer(Netty, port = 8080) {
         install(MicrometerMetrics) {
@@ -32,11 +32,11 @@ fun initKtor(
         }
         routing {
             get("/isReady") {
-                val status = helse.ready()
+                val status = health.ready()
                 call.respond(status.code, status.message)
             }
             get("/isAlive") {
-                val alive = helse.alive()
+                val alive = health.alive()
                 call.respond(alive.code, alive.message)
             }
             get("/metrics") {

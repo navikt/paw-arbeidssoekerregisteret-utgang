@@ -1,9 +1,9 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health
 
 import io.ktor.http.HttpStatusCode
 import org.apache.kafka.streams.KafkaStreams
 
-class Helse(private val kafkaStreams: KafkaStreams) {
+class Health(private val kafkaStreams: KafkaStreams) {
     fun alive(): Status {
         val state = kafkaStreams.state()
         val httpStatusCode = when (state) {
