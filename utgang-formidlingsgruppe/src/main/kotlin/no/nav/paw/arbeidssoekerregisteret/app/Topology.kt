@@ -59,8 +59,8 @@ fun StreamsBuilder.appTopology(
                 identitetsnummer = value.foedselsnummer.foedselsnummer,
                 metadata = Metadata(
                     tidspunkt = Instant.now(),
-                    aarsak = "Formidlingsgruppe endret til ${value.formidlingsgruppe.kode}",
-                    kilde = "Arena formidlingsgruppetopic",
+                    aarsak = value.formidlingsgruppe.kode,
+                    kilde = "topic:$formidlingsgrupperTopic",
                     utfoertAv = Bruker(
                         type = BrukerType.SYSTEM,
                         id = ApplicationInfo.id
