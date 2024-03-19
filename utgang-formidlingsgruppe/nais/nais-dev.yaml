@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: paw-arbsoekreg-utgang-formidlingsgruppe
+  name: paw-arbeidssoekerregisteret-utgang-formidlingsgruppe
   namespace: paw
   labels:
     team: paw
