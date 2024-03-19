@@ -16,13 +16,13 @@ class HendelseSerde : Serde<Avsluttet> {
     override fun deserializer(): Deserializer<Avsluttet> = HendelseSerializerDeserializer()
 }
 
-class HendelseSerializer() : Serializer<Avsluttet> {
+class HendelseSerializer : Serializer<Avsluttet> {
     override fun serialize(topic: String?, data: Avsluttet?): ByteArray {
         return hendelseObjectMapper.writeValueAsBytes(data)
     }
 }
 
-class HendelseSerializerDeserializer() : Deserializer<Avsluttet> {
+class HendelseSerializerDeserializer : Deserializer<Avsluttet> {
     override fun deserialize(topic: String?, data: ByteArray?): Avsluttet? {
         return hendelseObjectMapper.readValue(data, Avsluttet::class.java)
     }

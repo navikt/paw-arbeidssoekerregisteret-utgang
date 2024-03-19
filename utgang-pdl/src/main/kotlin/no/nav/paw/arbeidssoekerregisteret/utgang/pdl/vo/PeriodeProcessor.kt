@@ -1,8 +1,8 @@
 package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo
 
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.scheduleAvsluttPerioder
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet

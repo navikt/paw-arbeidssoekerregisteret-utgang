@@ -3,8 +3,8 @@ package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.lagreEllerSlettPeriode
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder

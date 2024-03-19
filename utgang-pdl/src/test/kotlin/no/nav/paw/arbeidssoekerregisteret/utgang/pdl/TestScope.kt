@@ -7,8 +7,8 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.IdAndRecordKey
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.IdAndRecordKey
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock

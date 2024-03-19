@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl
 
 const val PDL_CONFIG_FILE = "pdl_client_config.toml"
 data class PdlConfig(

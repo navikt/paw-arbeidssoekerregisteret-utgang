@@ -1,8 +1,9 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl
 
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.PDL_CONFIG_FILE
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.PdlConfig
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.kafkakeygenerator.auth.AzureM2MConfig
 import no.nav.paw.kafkakeygenerator.auth.azureAdM2MTokenClient
@@ -33,5 +34,11 @@ private fun createPdlClient(): PdlClient {
 
     return PdlClient(pdlConfig.url, pdlConfig.tema, createHttpClient()) {
         m2mTokenClient.createMachineToMachineToken(pdlConfig.scope)
+    }
+}
+
+private fun createHttpClient() = HttpClient {
+    install(ContentNegotiation) {
+        jackson()
     }
 }

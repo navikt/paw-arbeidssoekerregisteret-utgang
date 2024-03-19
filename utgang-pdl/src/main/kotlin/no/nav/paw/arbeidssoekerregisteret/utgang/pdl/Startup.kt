@@ -4,14 +4,12 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.core.instrument.binder.kafka.KafkaStreamsMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.createIdAndRecordKeyFunction
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health.Health
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.health.initKtor
 import org.apache.kafka.common.serialization.Serdes

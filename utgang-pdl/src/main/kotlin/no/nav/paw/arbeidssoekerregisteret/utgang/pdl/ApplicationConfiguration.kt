@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 
 const val APPLICATION_CONFIG_FILE = "application_config.toml"
 data class ApplicationConfiguration(
