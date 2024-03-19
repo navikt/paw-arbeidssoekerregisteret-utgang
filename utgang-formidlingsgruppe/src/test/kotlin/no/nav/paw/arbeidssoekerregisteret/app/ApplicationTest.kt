@@ -47,6 +47,7 @@ class ApplicationTest : FreeSpec({
             "Når vi mottar periode start skjer det ingenting" {
                 periodeTopic.pipeInput(1L, periodeStart)
                 hendelseloggTopic.isEmpty shouldBe true
+                kevValueStore.get(1L) shouldBe periodeStart
             }
             "Når vi mottar ISERV datert før periode start skjer det ingenting" {
                 formidlingsgruppeTopic.pipeInput(
@@ -80,6 +81,7 @@ class ApplicationTest : FreeSpec({
             }
             "Når vi mottar ISERV datert etter periode start genereres en 'stoppet' melding" {
                 formidlingsgruppeTopic.pipeInput(
+                    "Some random key",
                     formilingsgruppeHendelse(
                         foedselsnummer = periodeStart.identitetsnummer,
                         formidlingsgruppe = iserv,
@@ -92,6 +94,24 @@ class ApplicationTest : FreeSpec({
                 kv.value.shouldBeInstanceOf<Avsluttet>()
                 kv.value.id shouldBe kafkaKeysClient(periodeStart.identitetsnummer).id
                 between(kv.value.metadata.tidspunkt, Instant.now()).abs() shouldBeLessThan ofSeconds(60)
+            }
+            "Når perioden stoppes slettes den fra state store" {
+                periodeTopic.pipeInput(
+                    1L,
+                    Periode(
+                        periodeStart.id,
+                        periodeStart.identitetsnummer,
+                        periodeStart.startet,
+                        ApiMetadata(
+                            periodeStart.startet.tidspunkt + 1.dager,
+                            bruker,
+                            "junit",
+                            "iserv"
+                        )
+                    )
+                )
+                hendelseloggTopic.isEmpty shouldBe true
+                kevValueStore.get(1L) shouldBe null
             }
         }
     }
