@@ -40,6 +40,21 @@ dependencyResolutionManagement {
         val noNavCommonVersion = "3.2024.02.21_11.18-8f9b43befae1"
         val noNavSecurityVersion = "3.1.5"
         val ktorVersion = "2.3.9"
+
+        val logstashVersion = "7.3"
+        val logbackVersion = "1.4.14"
+        create("logging") {
+            library(
+                "logbackClassic",
+                "ch.qos.logback",
+                "logback-classic"
+            ).version(logbackVersion)
+            library(
+                "logstashLogbackEncoder",
+                "net.logstash.logback",
+                "logstash-logback-encoder"
+            ).version(logstashVersion)
+        }
         create("ktorClient") {
             library(
                 "contentNegotiation",
