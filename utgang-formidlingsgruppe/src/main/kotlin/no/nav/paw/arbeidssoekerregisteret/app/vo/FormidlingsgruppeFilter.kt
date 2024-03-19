@@ -66,7 +66,7 @@ class FormidlingsgruppeFilter(
             else -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_0_1H
         }
         prometheusMeterRegistry.counter(
-            "paw.arbeidssoekerregisteret.formidlingsgrupper.filter",
+            "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
             listOf(Tag.of("resultat", resultat.name))
         ).increment()
         if (resultat == FilterResultat.INKLUDER) {
