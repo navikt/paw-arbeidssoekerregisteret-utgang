@@ -69,5 +69,5 @@ jobs:
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
-          RESOURCE: utgang-formidlingsgruppe/nais/nais.yaml
+          RESOURCE: utgang-formidlingsgruppe/nais/nais-dev.yaml
           VAR: image=${{ needs.build.outputs.image }},kafka=nav-dev
