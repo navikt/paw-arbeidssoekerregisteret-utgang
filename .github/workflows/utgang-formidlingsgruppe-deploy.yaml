@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           cache: gradle
       - name: set module to build
-        run: echo "module=utgang-formidlingsgruppe" >> $GITHUB_ENV
+        run: echo "MODULE=utgang-formidlingsgruppe" >> $GITHUB_ENV
       - name: Set version
         run: echo "VERSION=$(date +'%y.%m.%d').${{ github.run_number }}-${{ github.run_attempt }}" >> $GITHUB_ENV
       - name: Login GAR
@@ -48,8 +48,8 @@ jobs:
         working-directory: ./
         run: |
           echo "image=${{ env.IMAGE }}:${{ env.VERSION }}" >> $GITHUB_OUTPUT
-          echo -Pversion=${{ env.VERSION }} -Pimage=${{ env.IMAGE }} ${{ module }}:build ${{ module }}:test ${{ module }}:jib
-          ./gradlew -Pversion=${{ env.VERSION }} -Pimage=${{ env.IMAGE }} ${{ module }}:build ${{ module }}:test ${{ module }}:jib
+          echo -Pversion=${{ env.VERSION }} -Pimage=${{ env.IMAGE }} ${{ MODULE }}:build ${{ MODULE }}:test ${{ MODULE }}:jib
+          ./gradlew -Pversion=${{ env.VERSION }} -Pimage=${{ env.IMAGE }} ${{ MODULE }}:build ${{ MODULE }}:test ${{ MODULE }}:jib
           echo "DIGEST=$(cat app/build/jib-image.digest)" >> $GITHUB_ENV
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
