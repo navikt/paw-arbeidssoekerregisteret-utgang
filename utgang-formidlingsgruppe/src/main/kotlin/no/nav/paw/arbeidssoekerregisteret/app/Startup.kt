@@ -43,11 +43,13 @@ fun main() {
     logger.info("Starter: {}", ApplicationInfo.id)
     val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val kafkaConfig = loadNaisOrLocalConfiguration<KafkaConfig>(KAFKA_CONFIG_WITH_SCHEME_REG)
+    logger.info("Lastet kafka config")
     val idAndRecordKeyFunction = createIdAndRecordKeyFunction()
+    logger.info("idAndRecordKeyFunction opprettet")
     val streamsConfig = KafkaStreamsFactory("v1", kafkaConfig)
         .withDefaultKeySerde(Serdes.LongSerde::class)
         .withDefaultValueSerde(SpecificAvroSerde::class)
-
+    logger.info("streamsConfig opprettet")
     val streamsBuilder = StreamsBuilder()
         .addStateStore(
             Stores.keyValueStoreBuilder(
@@ -56,6 +58,7 @@ fun main() {
                 streamsConfig.createSpecificAvroSerde()
             )
         )
+    logger.info("streamsBuilder opprettet")
     val topology = streamsBuilder.appTopology(
         prometheusMeterRegistry,
         "aktivePerioder",
@@ -64,14 +67,17 @@ fun main() {
         formidlingsGruppeTopic(currentNaisEnv),
         hendelsesLogTopic
     )
+    logger.info("topology opprettet")
     val kafkaStreams = KafkaStreams(
         topology,
         StreamsConfig(streamsConfig.properties)
     )
+    logger.info("kafkaStreams opprettet")
     kafkaStreams.setUncaughtExceptionHandler { throwable ->
         logger.error("Uventet feil: ${throwable.message}", throwable)
         StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
     }
+    logger.info("UncaughtExceptionHandler satt")
     initKtor(
         kafkaStreamsMetrics = KafkaStreamsMetrics(kafkaStreams),
         prometheusRegistry = prometheusMeterRegistry,
