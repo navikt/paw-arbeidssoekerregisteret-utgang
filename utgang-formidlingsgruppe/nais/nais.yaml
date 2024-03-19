@@ -1,0 +1,40 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: paw-arbsoekreg-utgang-formidlingsgruppe
+  namespace: paw
+  labels:
+    team: paw
+spec:
+  image: {{ image }}
+  port: 8080
+  replicas:
+    min: 6
+    max: 6
+  liveness:
+    path: /isAlive
+    initialDelay: 10
+  readiness:
+    path: /isReady
+    initialDelay: 10
+  prometheus:
+    enabled: true
+    path: /metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+  kafka:
+    pool: {{ kafka }}
+    streams: true
+  resources:
+    limits:
+      memory: 1024Mi
+      cpu: 500m
+    requests:
+      memory: 512Mi
+      cpu: 250m
+  accessPolicy:
+    outbound:
+      rules:
+        - application: paw-kafka-key-generator
