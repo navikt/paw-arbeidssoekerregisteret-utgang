@@ -78,10 +78,13 @@ fun main() {
         StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
     }
     logger.info("UncaughtExceptionHandler satt")
+    val helse = Helse(kafkaStreams)
+    val streamMetrics = KafkaStreamsMetrics(kafkaStreams)
+    logger.info("Starter ktor...")
     initKtor(
-        kafkaStreamsMetrics = KafkaStreamsMetrics(kafkaStreams),
+        kafkaStreamsMetrics = streamMetrics,
         prometheusRegistry = prometheusMeterRegistry,
-        helse = Helse(kafkaStreams)
+        helse = helse
     ).start(wait = true)
     logger.info("Avsluttet")
 }

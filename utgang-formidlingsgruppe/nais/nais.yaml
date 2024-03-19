@@ -33,10 +33,10 @@ spec:
   resources:
     limits:
       memory: 1024Mi
-      cpu: 500m
+      cpu: 1000m
     requests:
       memory: 512Mi
-      cpu: 250m
+      cpu: 500m
   accessPolicy:
     outbound:
       rules:
