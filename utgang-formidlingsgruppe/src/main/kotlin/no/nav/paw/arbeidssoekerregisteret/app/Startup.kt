@@ -34,8 +34,8 @@ import java.util.*
 
 const val partitionCount: Int = 6
 
-const val periodeTopic = "paw.arbeidssokerperioder-beta-v14"
-const val hendelsesLogTopic = "paw.formidlingsgruppetopic-beta-v1"
+const val periodeTopic = "paw.arbeidssokerperioder-v1"
+const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-v1"
 fun formidlingsGruppeTopic(env: NaisEnv) = "teamarenanais.aapen-arena-formidlingsgruppeendret-v1-${if (env == NaisEnv.ProdGCP) "p" else "q"}"
 
 fun main() {
