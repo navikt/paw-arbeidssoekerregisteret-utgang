@@ -1,4 +1,4 @@
-name: utgang-formodlingsgruppe, build, push, and deploy
+name: Formidlingsgruppe - Utgang
 
 on:
   push:
