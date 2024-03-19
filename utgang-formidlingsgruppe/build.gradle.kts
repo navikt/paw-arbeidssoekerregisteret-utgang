@@ -48,7 +48,7 @@ java {
 }
 
 application {
-    mainClass = "no.nav.paw.arbeidssoekerregisteret.app.Startup"
+    mainClass = "no.nav.paw.arbeidssoekerregisteret.app.StartupKt"
 }
 
 jib {
