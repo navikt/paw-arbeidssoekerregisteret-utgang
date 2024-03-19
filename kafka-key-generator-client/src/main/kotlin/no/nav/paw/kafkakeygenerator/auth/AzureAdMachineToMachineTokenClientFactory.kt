@@ -9,7 +9,7 @@ import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
-fun azureAdM2MTokenClient(naisEnv: NaisEnv, azureProviderConfig: AuthProvider): AzureAdMachineToMachineTokenClient =
+fun azureAdM2MTokenClient(naisEnv: NaisEnv, azureProviderConfig: AzureM2MConfig): AzureAdMachineToMachineTokenClient =
     when (naisEnv) {
         NaisEnv.Local -> AzureAdTokenClientBuilder.builder()
             .withClientId(azureProviderConfig.clientId)
