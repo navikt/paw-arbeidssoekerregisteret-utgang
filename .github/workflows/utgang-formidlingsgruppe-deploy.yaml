@@ -59,6 +59,9 @@ jobs:
           image_ref: ${{ env.IMAGE }}@${{ env.DIGEST }}
   deploy-dev:
     name: Deploy to dev-gcp
+    permissions:
+      contents: read
+      id-token: write
     needs: build
     runs-on: ubuntu-latest
     steps:
