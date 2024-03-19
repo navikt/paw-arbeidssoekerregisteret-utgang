@@ -15,7 +15,7 @@ on:
       - 'gradlew'
 
 env:
-  IMAGE: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/paw/${{ paw-arbsoekreg-utgang-formidlingsgruppe }}
+  IMAGE: europe-north1-docker.pkg.dev/${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}/paw/paw-arbsoekreg-utgang-formidlingsgruppe
 jobs:
   build:
     name: Build and push Docker container
