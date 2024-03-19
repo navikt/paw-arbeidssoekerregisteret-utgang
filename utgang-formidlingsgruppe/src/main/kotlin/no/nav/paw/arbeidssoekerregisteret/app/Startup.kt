@@ -77,6 +77,7 @@ fun main() {
         logger.error("Uventet feil: ${throwable.message}", throwable)
         StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
     }
+    kafkaStreams.start()
     logger.info("UncaughtExceptionHandler satt")
     val helse = Helse(kafkaStreams)
     val streamMetrics = KafkaStreamsMetrics(kafkaStreams)
