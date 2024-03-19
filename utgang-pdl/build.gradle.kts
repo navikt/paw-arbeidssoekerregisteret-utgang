@@ -1,4 +1,3 @@
-import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
 
 plugins {
     kotlin("jvm")
@@ -42,6 +41,7 @@ dependencies {
 
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.0")
     testImplementation(orgApacheKafka.streamsTest)
+    testImplementation("io.mockk:mockk:1.13.8")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

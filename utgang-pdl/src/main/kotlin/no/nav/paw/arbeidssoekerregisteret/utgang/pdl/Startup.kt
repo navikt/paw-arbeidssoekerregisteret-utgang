@@ -4,12 +4,12 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.core.instrument.binder.kafka.KafkaStreamsMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.PdlHentPerson
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
 import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.createPdlClient
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.APPLICATION_CONFIG_FILE
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.config.ApplicationConfiguration
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.helse.Helse
@@ -22,8 +22,8 @@ import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler
 import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
 
-const val periodeTopic = "paw.arbeidssokerperioder-beta-v14"
-const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-beta-v14"
+const val periodeTopic = "paw.arbeidssokerperioder-v1"
+const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-v1"
 
 fun main() {
     val logger = LoggerFactory.getLogger("app")
@@ -34,7 +34,6 @@ fun main() {
     val applicationConfiguration = loadNaisOrLocalConfiguration<ApplicationConfiguration>(APPLICATION_CONFIG_FILE)
 
     val idAndRecordKeyFunction = createIdAndRecordKeyFunction()
-    val pdlClient = createPdlClient()
     val streamsConfig = KafkaStreamsFactory(applicationConfiguration.applicationIdSuffix, kafkaConfig)
         .withDefaultKeySerde(Serdes.LongSerde::class)
         .withDefaultValueSerde(SpecificAvroSerde::class)
@@ -51,7 +50,7 @@ fun main() {
         prometheusMeterRegistry,
         "aktivePerioder",
         idAndRecordKeyFunction,
-        pdlClient,
+        pdlHentPerson = PdlHentPerson.create(),
         periodeTopic,
         hendelsesLogTopic
     )

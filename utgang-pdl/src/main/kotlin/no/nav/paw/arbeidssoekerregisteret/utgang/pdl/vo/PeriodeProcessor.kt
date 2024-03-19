@@ -1,16 +1,14 @@
 package no.nav.paw.arbeidssoekerregisteret.app.vo
 
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import kotlinx.coroutines.runBlocking
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.ApplicationInfo
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.PdlHentPerson
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
-import no.nav.paw.pdl.PdlClient
-import no.nav.paw.pdl.hentPerson
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.ApplicationInfo
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Named
 import org.apache.kafka.streams.processor.PunctuationType
@@ -27,10 +25,10 @@ fun KStream<Long, Periode>.lagreEllerSlettPeriode(
     stateStoreName: String,
     prometheusMeterRegistry: PrometheusMeterRegistry,
     arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
-    pdlClient: PdlClient
+    pdlHentPerson: PdlHentPerson
 ): KStream<Long, Avsluttet> {
     val processor = {
-        PeriodeProcessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlClient)
+        PeriodeProcessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlHentPerson)
     }
     return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
 }
@@ -39,7 +37,7 @@ class PeriodeProcessor(
     private val stateStoreName: String,
     private val prometheusMeterRegistry: PrometheusMeterRegistry,
     private val arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
-    private val pdlClient: PdlClient
+    private val pdlHentPerson: PdlHentPerson
 ) : Processor<Long, Periode, Long, Avsluttet> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
     private var context: ProcessorContext<Long, Avsluttet>? = null
@@ -77,13 +75,12 @@ class PeriodeProcessor(
         try {
             stateStore.all().forEachRemaining { keyValue ->
                 val periode = keyValue.value
-                val result = runBlocking {
-                    pdlClient.hentPerson(
-                        ident = periode.identitetsnummer,
-                        callId = UUID.randomUUID().toString(),
-                        navConsumerId = "paw-arbeidssoekerregisteret-utgang-pdl"
+                val result =
+                    pdlHentPerson.hentPerson(
+                        periode.identitetsnummer,
+                        UUID.randomUUID().toString(),
+                        "paw-arbeidssoekerregisteret-utgang-pdl"
                     )
-                }
                 if (result == null) {
                     logger.error("Fant ikke person i PDL for periode: $periode")
                     return@forEachRemaining

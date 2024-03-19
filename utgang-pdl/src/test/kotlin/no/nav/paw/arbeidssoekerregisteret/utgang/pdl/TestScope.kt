@@ -8,28 +8,25 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.paw.arbeidssoekerregisteret.app.vo.HendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.IdAndRecordKey
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
-import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
-import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
-import no.nav.paw.config.kafka.KafkaConfig
-import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
+import no.nav.paw.pdl.graphql.generated.hentperson.Folkeregisterpersonstatus
+import no.nav.paw.pdl.graphql.generated.hentperson.Person
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Time
 import org.apache.kafka.streams.StreamsBuilder
+import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TestInputTopic
 import org.apache.kafka.streams.TestOutputTopic
 import org.apache.kafka.streams.TopologyTestDriver
 import org.apache.kafka.streams.state.KeyValueStore
 import org.apache.kafka.streams.state.internals.InMemoryKeyValueBytesStoreSupplier
 import org.apache.kafka.streams.state.internals.KeyValueStoreBuilder
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssokerregisteret.intern.v1.HarIdentitetsnummer
-import no.nav.paw.pdl.PdlClient
-import no.nav.paw.pdl.graphql.generated.hentperson.Person
+import java.util.*
 
 data class TestScope(
     val periodeTopic: TestInputTopic<Long, Periode>,
@@ -50,7 +47,7 @@ fun testScope(): TestScope {
                 }
         }
     }
-    val pdlClientMock: PdlClient =
+
     val periodeSerde = createAvroSerde<Periode>()
     val hendelseSerde = HendelseSerde()
     val stateStoreName = "stateStore"
@@ -63,10 +60,9 @@ fun testScope(): TestScope {
                 Time.SYSTEM
             )
         )
-    val kafkaConfig: KafkaConfig = loadNaisOrLocalConfiguration(KAFKA_CONFIG_WITH_SCHEME_REG)
-    val kafkaStreamsFactory = KafkaStreamsFactory("test", kafkaConfig)
-        .withDefaultKeySerde(Serdes.Long()::class)
-        .withDefaultValueSerde(SpecificAvroSerde::class)
+
+    val pdlMockResponse1 = generatePdlMockResponse("doedIFolkeregisteret")
+    val pdlMockResponse2 = generatePdlMockResponse("bosattEtterFolkeregisterloven")
 
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
@@ -74,10 +70,16 @@ fun testScope(): TestScope {
             hendelseLoggTopic = hendelsesLogTopic,
             periodeTopic = periodeTopic,
             idAndRecordKeyFunction = idAndRecordKeyFunction,
-            pdlClient = pdlClientMock,
+            pdlHentPerson = { ident, _, _ ->
+                when (ident) {
+                    "12345678901" -> pdlMockResponse1
+                    "12345678902" -> pdlMockResponse2
+                    else -> null
+                }
+            },
             prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         ),
-        kafkaStreamsFactory.properties
+        kafkaStreamProperties
     )
     val periodeInputTopic = testDriver.createInputTopic(
         periodeTopic,
@@ -97,8 +99,24 @@ fun testScope(): TestScope {
     )
 }
 
+fun generatePdlMockResponse(forenkletStatus: String): Person {
+    return Person(
+        emptyList(),
+        emptyList(),
+        listOf(
+            Folkeregisterpersonstatus(
+                forenkletStatus
+            )
+        ),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+    )
+}
+
+const val SCHEMA_REGISTRY_SCOPE = "mock"
+
 inline fun <reified T : SpecificRecord> createAvroSerde(): Serde<T> {
-    val SCHEMA_REGISTRY_SCOPE = "mock"
     return SpecificAvroSerde<T>(MockSchemaRegistry.getClientForScope(SCHEMA_REGISTRY_SCOPE)).apply {
         configure(
             mapOf(
@@ -110,10 +128,13 @@ inline fun <reified T : SpecificRecord> createAvroSerde(): Serde<T> {
     }
 }
 
-class MockPdlClient(): PdlClient {
-    fun PdlClient.hentPerson(identitetsnummer: String): Person {
-        return Person(
-            folkeregisterpersonstatus = listOf("bosattEtterFolkeregisterloven")
-        )
-    }
+val kafkaStreamProperties = Properties().apply {
+    this[StreamsConfig.APPLICATION_ID_CONFIG] = "test"
+    this[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "dummy:1234"
+    this[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.Long().javaClass
+    this[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = SpecificAvroSerde<SpecificRecord>().javaClass
+    this[KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS] = "true"
+    this[KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG] = "mock://$SCHEMA_REGISTRY_SCOPE"
 }
+
+
