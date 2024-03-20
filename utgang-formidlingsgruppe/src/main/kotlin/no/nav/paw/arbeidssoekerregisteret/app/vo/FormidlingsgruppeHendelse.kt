@@ -7,7 +7,7 @@ data class FormidlingsgruppeHendelse (
     val idFraKafkaKeyGenerator: Long?,
     val foedselsnummer: Foedselsnummer?,
     val personId: String?,
-    val personIdStatus: String,
+    val personIdStatus: String?,
     val operation: Operation?,
     val formidlingsgruppe: Formidlingsgruppe,
     val formidlingsgruppeEndret: LocalDateTime,
