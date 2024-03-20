@@ -43,7 +43,7 @@ dependencyResolutionManagement {
 
         val logstashVersion = "7.3"
         val logbackVersion = "1.4.14"
-        create("logging") {
+        create("loggingLibs") {
             library(
                 "logbackClassic",
                 "ch.qos.logback",
