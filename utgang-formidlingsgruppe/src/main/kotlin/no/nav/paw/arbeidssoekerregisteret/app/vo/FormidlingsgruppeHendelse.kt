@@ -6,9 +6,9 @@ data class FormidlingsgruppeHendelse (
     // Settes før repartition så slipper vi å hente den to ganger
     val idFraKafkaKeyGenerator: Long?,
     val foedselsnummer: Foedselsnummer?,
-    val personId: String,
+    val personId: String?,
     val personIdStatus: String,
-    val operation: Operation,
+    val operation: Operation?,
     val formidlingsgruppe: Formidlingsgruppe,
     val formidlingsgruppeEndret: LocalDateTime,
     val forrigeFormidlingsgruppe: Formidlingsgruppe?,
