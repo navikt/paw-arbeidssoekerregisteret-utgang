@@ -1,2 +1,2 @@
 url = "http://paw-kafka-key-generator/api/v2/hentEllerOpprett"
-scope = "api://prod-gcp.paw.paw-kafka-key-generator/.default"
+scope = "${KAFKA_KEYS_SCOPE}"
