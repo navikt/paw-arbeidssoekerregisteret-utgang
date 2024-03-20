@@ -4,7 +4,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.lagreEllerSlettPeriode
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentForenkletStatus
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsBuilder
@@ -15,7 +15,7 @@ fun StreamsBuilder.appTopology(
     prometheusRegistry: PrometheusMeterRegistry,
     stateStoreName: String,
     idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
-    pdlHentPerson: PdlHentPerson,
+    pdlHentForenkletStatus: PdlHentForenkletStatus,
     periodeTopic: String,
     hendelseLoggTopic: String
 ): Topology {
@@ -24,7 +24,7 @@ fun StreamsBuilder.appTopology(
             stateStoreName = stateStoreName,
             prometheusMeterRegistry = prometheusRegistry,
             arbeidssoekerIdFun = idAndRecordKeyFunction,
-            pdlHentPerson = pdlHentPerson
+            pdlHentForenkletStatus = pdlHentForenkletStatus
         )
         .to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
 

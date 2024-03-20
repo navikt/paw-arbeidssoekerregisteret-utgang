@@ -2,7 +2,7 @@ package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo
 
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentForenkletStatus
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.scheduleAvsluttPerioder
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
@@ -18,10 +18,10 @@ fun KStream<Long, Periode>.lagreEllerSlettPeriode(
     stateStoreName: String,
     prometheusMeterRegistry: PrometheusMeterRegistry,
     arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
-    pdlHentPerson: PdlHentPerson
+    pdlHentForenkletStatus: PdlHentForenkletStatus
 ): KStream<Long, Avsluttet> {
     val processor = {
-        PeriodeProcessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlHentPerson)
+        PeriodeProcessor(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdFun, pdlHentForenkletStatus)
     }
     return process(processor, Named.`as`("periodeProsessor"), stateStoreName)
 }
@@ -30,7 +30,7 @@ class PeriodeProcessor(
     private val stateStoreName: String,
     private val prometheusMeterRegistry: PrometheusMeterRegistry,
     private val arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction,
-    private val pdlHentPerson: PdlHentPerson
+    private val pdlHentForenkletStatus: PdlHentForenkletStatus
 ) : Processor<Long, Periode, Long, Avsluttet> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
     private var context: ProcessorContext<Long, Avsluttet>? = null
@@ -44,7 +44,7 @@ class PeriodeProcessor(
             requireNotNull(stateStore),
             Duration.ofDays(1),
             arbeidssoekerIdFun,
-            pdlHentPerson
+            pdlHentForenkletStatus
         )
     }
 

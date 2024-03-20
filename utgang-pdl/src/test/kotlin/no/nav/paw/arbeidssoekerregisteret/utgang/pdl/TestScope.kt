@@ -6,14 +6,14 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.IdAndRecordKey
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
-import no.nav.paw.pdl.graphql.generated.hentperson.Folkeregisterpersonstatus
-import no.nav.paw.pdl.graphql.generated.hentperson.Person
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatus.Folkeregisterpersonstatus
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatus.Person
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
@@ -70,7 +70,7 @@ fun testScope(): TestScope {
             hendelseLoggTopic = hendelsesLogTopic,
             periodeTopic = periodeTopic,
             idAndRecordKeyFunction = idAndRecordKeyFunction,
-            pdlHentPerson = { ident, _, _ ->
+            pdlHentForenkletStatus = { ident, _, _ ->
                 when (ident) {
                     "12345678901" -> pdlMockResponse1
                     "12345678902" -> pdlMockResponse2
@@ -101,16 +101,11 @@ fun testScope(): TestScope {
 
 fun generatePdlMockResponse(forenkletStatus: String): Person {
     return Person(
-        emptyList(),
-        emptyList(),
         listOf(
             Folkeregisterpersonstatus(
                 forenkletStatus
             )
-        ),
-        emptyList(),
-        emptyList(),
-        emptyList(),
+        )
     )
 }
 

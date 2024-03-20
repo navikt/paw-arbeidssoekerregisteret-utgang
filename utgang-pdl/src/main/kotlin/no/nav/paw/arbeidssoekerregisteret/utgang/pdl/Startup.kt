@@ -4,7 +4,7 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.core.instrument.binder.kafka.KafkaStreamsMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentPerson
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentForenkletStatus
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
 import no.nav.paw.config.kafka.KafkaConfig
@@ -48,7 +48,7 @@ fun main() {
         prometheusMeterRegistry,
         "aktivePerioder",
         idAndRecordKeyFunction,
-        pdlHentPerson = PdlHentPerson.create(),
+        pdlHentForenkletStatus = PdlHentForenkletStatus.create(),
         periodeTopic,
         hendelsesLogTopic
     )
