@@ -4,6 +4,7 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.app.functions.filterePaaAktivePeriode
 import no.nav.paw.arbeidssoekerregisteret.app.functions.genericProcess
 import no.nav.paw.arbeidssoekerregisteret.app.functions.lagreEllerSlettPeriode
+import no.nav.paw.arbeidssoekerregisteret.app.functions.mapNonNull
 import no.nav.paw.arbeidssoekerregisteret.app.vo.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
@@ -36,12 +37,15 @@ fun StreamsBuilder.appTopology(
             arbeidssoekerIdFun = idAndRecordKeyFunction
         )
 
+
     stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
         .filter { _, value ->
             value.formidlingsgruppe.kode.equals("ISERV", ignoreCase = true)
         }
+        .filter { _, value -> value.foedselsnummer != null }
         .map { _, value ->
-            val (id, newKey) = idAndRecordKeyFunction(value.foedselsnummer.foedselsnummer)
+            // Non null (!!) er trygg så lenge filteret over ikke fjernes
+            val (id, newKey) = idAndRecordKeyFunction(value.foedselsnummer!!.foedselsnummer)
             KeyValue(newKey, value.copy(idFraKafkaKeyGenerator = id))
         }
         .repartition(
@@ -55,24 +59,28 @@ fun StreamsBuilder.appTopology(
             prometheusRegistry,
             idAndRecordKeyFunction
         )
-        .mapValues { _, value ->
-            Avsluttet(
-                hendelseId = UUID.randomUUID(),
-                id = requireNotNull(value.idFraKafkaKeyGenerator) { "idFraKafkaKeyGenerator is null" },
-                identitetsnummer = value.foedselsnummer.foedselsnummer,
-                metadata = Metadata(
-                    tidspunkt = Instant.now(),
-                    aarsak = value.formidlingsgruppe.kode,
-                    kilde = "topic:$formidlingsgrupperTopic",
-                    utfoertAv = Bruker(
-                        type = BrukerType.SYSTEM,
-                        id = ApplicationInfo.id
+        // Non null mapping kan fjernes når vi er sikker på at bare filtrerte hendelser kommer hit
+        .mapNonNull("mapNonNullFnr") { formidlingsgruppeHendelse ->
+            formidlingsgruppeHendelse.foedselsnummer
+                ?.foedselsnummer
+                ?.let {
+                    Avsluttet(
+                        hendelseId = UUID.randomUUID(),
+                        id = requireNotNull(formidlingsgruppeHendelse.idFraKafkaKeyGenerator) { "idFraKafkaKeyGenerator is null" },
+                        identitetsnummer = it,
+                        metadata = Metadata(
+                            tidspunkt = Instant.now(),
+                            aarsak = formidlingsgruppeHendelse.formidlingsgruppe.kode,
+                            kilde = "topic:$formidlingsgrupperTopic",
+                            utfoertAv = Bruker(
+                                type = BrukerType.SYSTEM,
+                                id = ApplicationInfo.id
+                            )
+                        )
                     )
-                )
-            )
+                }
         }.genericProcess("setRecordTimestamp") { record ->
             forward(record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli()))
         }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
-
     return build()
 }

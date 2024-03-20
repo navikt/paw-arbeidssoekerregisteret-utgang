@@ -49,10 +49,10 @@ class FormidlingsgruppeFilter(
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
         val ctx = requireNotNull(context) { "Context is not initialized" }
+        val foedselsnummer = record.value().foedselsnummer?.foedselsnummer ?: return
         val storeKey =
-            record.value().idFraKafkaKeyGenerator ?: arbeidssoekerIdFun(
-                record.value().foedselsnummer.foedselsnummer
-            ).id
+            record.value().idFraKafkaKeyGenerator
+                ?: arbeidssoekerIdFun(foedselsnummer).id
         val periodeStartTime = store.get(storeKey)?.startet?.tidspunkt
         val requestedStopTime = record.value().formidlingsgruppeEndret.atZone(ZoneId.of("Europe/Oslo")).toInstant()
         val diffStartTilStopp = between(periodeStartTime, requestedStopTime)
@@ -76,7 +76,7 @@ class FormidlingsgruppeFilter(
 
 }
 
-val Int.timer : Duration get() = ofHours(this.toLong())
+val Int.timer: Duration get() = ofHours(this.toLong())
 
 enum class FilterResultat {
     INKLUDER,

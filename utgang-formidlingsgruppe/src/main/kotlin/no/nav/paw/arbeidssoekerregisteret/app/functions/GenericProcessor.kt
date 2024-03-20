@@ -10,11 +10,11 @@ import org.apache.kafka.streams.processor.api.Record
 fun <K, V_IN, V_OUT> KStream<K, V_IN>.mapNonNull(
     name: String,
     vararg stateStoreNames: String,
-    function: (Record<K, V_IN>) -> V_OUT?
+    function: (V_IN) -> V_OUT?
 ): KStream<K, V_OUT> {
     val processor = {
         GenericProcessor<K, V_IN, V_OUT> { record ->
-            val result = function(record)
+            val result = function(record.value())
             if (result != null) forward(record.withValue(result))
         }
     }
