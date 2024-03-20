@@ -12,8 +12,9 @@ import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatus.Folkeregisterpersonstatus
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatus.Person
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Person
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
@@ -61,8 +62,8 @@ fun testScope(): TestScope {
             )
         )
 
-    val pdlMockResponse1 = generatePdlMockResponse("doedIFolkeregisteret")
-    val pdlMockResponse2 = generatePdlMockResponse("bosattEtterFolkeregisterloven")
+    val pdlMockResponse1 = generatePdlMockResponse("12345678901", "doedIFolkeregisteret")
+    val pdlMockResponse2 = generatePdlMockResponse("12345678902", "bosattEtterFolkeregisterloven")
 
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
@@ -70,12 +71,11 @@ fun testScope(): TestScope {
             hendelseLoggTopic = hendelsesLogTopic,
             periodeTopic = periodeTopic,
             idAndRecordKeyFunction = idAndRecordKeyFunction,
-            pdlHentForenkletStatus = { ident, _, _ ->
-                when (ident) {
-                    "12345678901" -> pdlMockResponse1
-                    "12345678902" -> pdlMockResponse2
-                    else -> null
-                }
+            pdlHentForenkletStatus = { idents, _, _ ->
+                if (idents.contains("12345678901"))
+                    pdlMockResponse1
+                else
+                    pdlMockResponse2
             },
             prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         ),
@@ -99,14 +99,19 @@ fun testScope(): TestScope {
     )
 }
 
-fun generatePdlMockResponse(forenkletStatus: String): Person {
-    return Person(
-        listOf(
-            Folkeregisterpersonstatus(
-                forenkletStatus
-            )
-        )
-    )
+fun generatePdlMockResponse(ident: String, forenkletStatus: String): List<HentPersonBolkResult> {
+    return listOf(HentPersonBolkResult(
+            ident,
+            person = Person(
+                listOf(
+                    Folkeregisterpersonstatus(
+                        forenkletStatus,
+                    )
+                ),
+            ),
+            code = "ok",
+        ))
+
 }
 
 const val SCHEMA_REGISTRY_SCOPE = "mock"

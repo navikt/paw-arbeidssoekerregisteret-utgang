@@ -44,7 +44,8 @@ class PeriodeProcessor(
             requireNotNull(stateStore),
             Duration.ofDays(1),
             arbeidssoekerIdFun,
-            pdlHentForenkletStatus
+            pdlHentForenkletStatus,
+            prometheusMeterRegistry
         )
     }
 

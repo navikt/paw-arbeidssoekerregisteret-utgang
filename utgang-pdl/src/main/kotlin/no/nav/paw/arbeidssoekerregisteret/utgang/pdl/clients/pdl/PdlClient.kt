@@ -9,18 +9,18 @@ import no.nav.paw.kafkakeygenerator.auth.AzureM2MConfig
 import no.nav.paw.kafkakeygenerator.auth.azureAdM2MTokenClient
 import no.nav.paw.kafkakeygenerator.auth.currentNaisEnv
 import no.nav.paw.pdl.PdlClient
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatus.Person
-import no.nav.paw.pdl.hentForenkletStatus
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
+import no.nav.paw.pdl.hentForenkletStatusBolk
 
 fun interface PdlHentForenkletStatus {
-    fun hentForenkletStatus(ident: String, callId: String, navConsumerId: String): Person?
+    fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String): List<HentPersonBolkResult>?
 
     companion object {
         fun create(): PdlHentForenkletStatus {
             val pdlClient = createPdlClient()
             return PdlHentForenkletStatus { ident, callId, navConsumerId ->
                 runBlocking {
-                    pdlClient.hentForenkletStatus(ident = ident, callId = callId, navConsumerId = navConsumerId)
+                    pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId)
                 }
             }
         }
