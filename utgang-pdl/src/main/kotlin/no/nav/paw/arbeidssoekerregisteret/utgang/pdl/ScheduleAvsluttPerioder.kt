@@ -1,9 +1,10 @@
 package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 
-import io.micrometer.core.instrument.Tags
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentForenkletStatus
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellAvsluttetHendelser
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellStatusKoderFraPdlHentPersonBolk
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
@@ -30,8 +31,6 @@ fun scheduleAvsluttPerioder(
 
     val logger = LoggerFactory.getLogger("scheduleAvsluttPerioder")
 
-    val stateStoreSize = stateStore.all().asSequence().count()
-    prometheusMeterRegistry.counter("$METRICS_UTGANG_PDL-antall-i-statestore", Tags.of("Antall stateStore")).increment(stateStoreSize.toDouble())
     try {
         stateStore.all().use { iterator ->
             iterator
@@ -42,26 +41,27 @@ fun scheduleAvsluttPerioder(
 
                     val results =
                         try {
-                            prometheusMeterRegistry.counter("$METRICS_UTGANG_PDL-antall-kall", Tags.of("Antall kall")).increment()
                             pdlHentForenkletStatus.hentForenkletStatus(
                                 identitetsnummere,
                                 UUID.randomUUID().toString(),
                                 "paw-arbeidssoekerregisteret-utgang-pdl"
                             )
                         } catch (e: PdlException) {
-                            prometheusMeterRegistry.counter("$METRICS_UTGANG_PDL-antall-feilende-kall", Tags.of("Antall feilende kall")).increment()
                             logger.error("PDL hentForenkletStatus feiler med: $e", e)
                             return@chunked
                         }
 
                     if (results == null) {
-                        prometheusMeterRegistry.counter("$METRICS_UTGANG_PDL-antall-kall-returnerte-null", Tags.of("Antall kall returnerte null")).increment()
                         logger.error("PDL hentForenkletStatus returnerte null")
                         return@chunked
                     }
 
                     results.forEachIndexed { index, result ->
+                        prometheusMeterRegistry.tellStatusKoderFraPdlHentPersonBolk(result.code)
                         val person = result.person ?: return@forEachIndexed
+                        if(setOf("bad_request", "not_found").contains(result.code)) {
+                            return@forEachIndexed
+                        }
                         val periode = chunk[index].value
                         if (person.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
 
@@ -85,8 +85,8 @@ fun scheduleAvsluttPerioder(
                                     )
                                 )
 
-                            prometheusMeterRegistry.counter("$METRICS_UTGANG_PDL-antall-avsluttet", Tags.of("Antall perioder avsluttet")).increment()
 
+                            prometheusMeterRegistry.tellAvsluttetHendelser(aarsaker)
                             val record =
                                 Record(newKey, avsluttetHendelse, avsluttetHendelse.metadata.tidspunkt.toEpochMilli())
                             ctx.forward(record)
