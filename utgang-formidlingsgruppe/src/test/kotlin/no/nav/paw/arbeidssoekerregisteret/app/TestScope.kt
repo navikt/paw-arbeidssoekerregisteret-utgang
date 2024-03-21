@@ -8,15 +8,10 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
 import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelseSerde
-import no.nav.paw.arbeidssoekerregisteret.app.vo.HendelseSerde
+import no.nav.paw.arbeidssoekerregisteret.app.vo.AvsluttetSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
-import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
-import no.nav.paw.config.kafka.KAFKA_CONFIG_WITH_SCHEME_REG
-import no.nav.paw.config.kafka.KafkaConfig
-import no.nav.paw.config.kafka.streams.KafkaStreamsFactory
 import no.nav.paw.kafkakeygenerator.auth.NaisEnv
-import no.nav.paw.kafkakeygenerator.client.KafkaKeysClient
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
@@ -53,7 +48,7 @@ fun testScope(): TestScope {
     }
     val periodeSerde = createAvroSerde<Periode>()
     val formidlingsgruppeSerde = FormidlingsgruppeHendelseSerde()
-    val hendelseSerde = HendelseSerde()
+    val avsluttetSerde = AvsluttetSerde()
     val stateStoreName = "stateStore"
     val streamBuilder = StreamsBuilder()
         .addStateStore(
@@ -90,7 +85,7 @@ fun testScope(): TestScope {
     val hendelseOutputTopic = testDriver.createOutputTopic(
         hendelsesLogTopic,
         Serdes.Long().deserializer(),
-        hendelseSerde.deserializer()
+        avsluttetSerde.deserializer()
     )
     return TestScope(
         periodeTopic = periodeInputTopic,

@@ -34,9 +34,12 @@ import java.util.*
 
 const val partitionCount: Int = 6
 
+const val applicationStreamVersion = "v2"
 const val periodeTopic = "paw.arbeidssokerperioder-v1"
 const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-v1"
-fun formidlingsGruppeTopic(env: NaisEnv) = "teamarenanais.aapen-arena-formidlingsgruppeendret-v1-${if (env == NaisEnv.ProdGCP) "p" else "q"}"
+
+fun formidlingsGruppeTopic(env: NaisEnv) =
+    "teamarenanais.aapen-arena-formidlingsgruppeendret-v1-${if (env == NaisEnv.ProdGCP) "p" else "q"}"
 
 fun main() {
     val logger = LoggerFactory.getLogger("app")
@@ -44,7 +47,10 @@ fun main() {
     val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val kafkaConfig = loadNaisOrLocalConfiguration<KafkaConfig>(KAFKA_CONFIG_WITH_SCHEME_REG)
     val idAndRecordKeyFunction = createIdAndRecordKeyFunction()
-    val streamsConfig = KafkaStreamsFactory("v1", kafkaConfig)
+    val streamsConfig = KafkaStreamsFactory(
+        applicationIdSuffix = applicationStreamVersion,
+        config = kafkaConfig
+    )
         .withDefaultKeySerde(Serdes.LongSerde::class)
         .withDefaultValueSerde(SpecificAvroSerde::class)
     val streamsBuilder = StreamsBuilder()

@@ -5,15 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
-import no.nav.paw.arbeidssokerregisteret.intern.v1.Hendelse
-import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serializer
 
-class HendelseSerde: Serde<Avsluttet> {
+class AvsluttetSerde: Serde<Avsluttet> {
     override fun serializer() = HendelseSerializer()
 
     override fun deserializer(): Deserializer<Avsluttet> = HendelseSerializerDeserializer()

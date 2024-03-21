@@ -1,10 +1,8 @@
 package no.nav.paw.arbeidssoekerregisteret.app.functions
 
-
-import io.micrometer.core.instrument.Tag
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.nav.paw.arbeidssoekerregisteret.app.KafkaIdAndRecordKeyFunction
-import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
+import no.nav.paw.arbeidssoekerregisteret.app.tellFilterResultat
+import no.nav.paw.arbeidssoekerregisteret.app.vo.GyldigHendelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.Named
@@ -12,49 +10,40 @@ import org.apache.kafka.streams.processor.api.Processor
 import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Duration.*
-import java.time.ZoneId
 
 
-fun KStream<Long, FormidlingsgruppeHendelse>.filterePaaAktivePeriode(
+fun KStream<Long, GyldigHendelse>.filterePaaAktivePeriode(
     stateStoreName: String,
-    prometheusMeterRegistry: PrometheusMeterRegistry,
-    arbeidssoekerIdfun: KafkaIdAndRecordKeyFunction
-): KStream<Long, FormidlingsgruppeHendelse> {
+    prometheusMeterRegistry: PrometheusMeterRegistry
+): KStream<Long, GyldigHendelse> {
     val processor = {
-        FormidlingsgruppeFilter(stateStoreName, prometheusMeterRegistry, arbeidssoekerIdfun)
+        FormidlingsgruppeFilter(stateStoreName, prometheusMeterRegistry)
     }
     return process(processor, Named.`as`("filterAktivePerioder"), stateStoreName)
 }
 
 class FormidlingsgruppeFilter(
     private val stateStoreName: String,
-    private val prometheusMeterRegistry: PrometheusMeterRegistry,
-    private val arbeidssoekerIdFun: KafkaIdAndRecordKeyFunction
-) : Processor<Long, FormidlingsgruppeHendelse, Long, FormidlingsgruppeHendelse> {
+    private val prometheusMeterRegistry: PrometheusMeterRegistry
+) : Processor<Long, GyldigHendelse, Long, GyldigHendelse> {
     private var stateStore: KeyValueStore<Long, Periode>? = null
-    private var context: ProcessorContext<Long, FormidlingsgruppeHendelse>? = null
-    private val logger = LoggerFactory.getLogger("applicationTopology")
+    private var context: ProcessorContext<Long, GyldigHendelse>? = null
 
-    override fun init(context: ProcessorContext<Long, FormidlingsgruppeHendelse>?) {
+    override fun init(context: ProcessorContext<Long, GyldigHendelse>?) {
         super.init(context)
         this.context = context
         stateStore = context?.getStateStore(stateStoreName)
     }
 
-
-    override fun process(record: Record<Long, FormidlingsgruppeHendelse>?) {
+    override fun process(record: Record<Long, GyldigHendelse>?) {
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
         val ctx = requireNotNull(context) { "Context is not initialized" }
-        val foedselsnummer = record.value().foedselsnummer?.foedselsnummer ?: return
-        val storeKey =
-            record.value().idFraKafkaKeyGenerator
-                ?: arbeidssoekerIdFun(foedselsnummer).id
-        val periodeStartTime = store.get(storeKey)?.startet?.tidspunkt
-        val requestedStopTime = record.value().formidlingsgruppeEndret.atZone(ZoneId.of("Europe/Oslo")).toInstant()
+        val hendelse = record.value()
+        val periodeStartTime = store.get(hendelse.id)?.startet?.tidspunkt
+        val requestedStopTime = hendelse.formidlingsgruppeEndret
         val diffStartTilStopp = between(periodeStartTime, requestedStopTime)
         val resultat = when {
             periodeStartTime == null -> FilterResultat.INGEN_PERIODE
@@ -65,10 +54,7 @@ class FormidlingsgruppeFilter(
             diffStartTilStopp < (-1).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_1_2H
             else -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_0_1H
         }
-        prometheusMeterRegistry.counter(
-            "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
-            listOf(Tag.of("resultat", resultat.name))
-        ).increment()
+        prometheusMeterRegistry.tellFilterResultat(resultat)
         if (resultat == FilterResultat.INKLUDER) {
             ctx.forward(record)
         }
@@ -87,4 +73,3 @@ enum class FilterResultat {
     IGNORER_PERIODE_STARTET_ETTER_4_8H,
     IGNORER_PERIODE_STARTET_ETTER_8_,
 }
-

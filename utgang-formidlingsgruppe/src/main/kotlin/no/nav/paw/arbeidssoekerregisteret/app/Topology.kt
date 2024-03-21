@@ -36,51 +36,46 @@ fun StreamsBuilder.appTopology(
             prometheusMeterRegistry = prometheusRegistry,
             arbeidssoekerIdFun = idAndRecordKeyFunction
         )
-
-
     stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
-        .filter { _, value ->
-            value.formidlingsgruppe.kode.equals("ISERV", ignoreCase = true)
+        .mapNonNull("mapTilGyldigHendelse") { formidlingsgruppeHendelse ->
+            formidlingsgruppeHendelse.validValuesOrNull()
+                .also { gyldigeVerdier ->
+                    if (gyldigeVerdier == null) {
+                        prometheusRegistry.tellUgyldigHendelse()
+                    }
+                }
         }
-        .filter { _, value -> value.foedselsnummer != null }
-        .map { _, value ->
-            // Non null (!!) er trygg så lenge filteret over ikke fjernes
-            val (id, newKey) = idAndRecordKeyFunction(value.foedselsnummer!!.foedselsnummer)
-            KeyValue(newKey, value.copy(idFraKafkaKeyGenerator = id))
+        .filter { _, (_, formidlingsgruppe, _) ->
+            formidlingsgruppe.kode.equals("ISERV", ignoreCase = true).also { isServ ->
+                if (!isServ) {
+                    prometheusRegistry.tellIgnorertGrunnetFormidlingsgruppe(formidlingsgruppe)
+                }
+            }
+        }
+        .map { _, (foedselsnummer, formidlingsgruppe, tidspunkt) ->
+            val (id, newKey) = idAndRecordKeyFunction(foedselsnummer.foedselsnummer)
+            KeyValue(
+                newKey, GyldigHendelse(
+                    id = id,
+                    foedselsnummer = foedselsnummer,
+                    formidlingsgruppe = formidlingsgruppe,
+                    formidlingsgruppeEndret = tidspunkt
+                )
+            )
         }
         .repartition(
             Repartitioned
-                .numberOfPartitions<Long?, FormidlingsgruppeHendelse?>(partitionCount)
+                .numberOfPartitions<Long?, GyldigHendelse?>(partitionCount)
                 .withKeySerde(Serdes.Long())
-                .withValueSerde(formidlingsgruppeHendelseSerde)
+                .withValueSerde(GyldigHendelseSerde())
         )
         .filterePaaAktivePeriode(
             stateStoreName,
-            prometheusRegistry,
-            idAndRecordKeyFunction
+            prometheusRegistry
         )
-        // Non null mapping kan fjernes når vi er sikker på at bare filtrerte hendelser kommer hit
-        .mapNonNull("mapNonNullFnr") { formidlingsgruppeHendelse ->
-            formidlingsgruppeHendelse.foedselsnummer
-                ?.foedselsnummer
-                ?.let {
-                    Avsluttet(
-                        hendelseId = UUID.randomUUID(),
-                        id = requireNotNull(formidlingsgruppeHendelse.idFraKafkaKeyGenerator) { "idFraKafkaKeyGenerator is null" },
-                        identitetsnummer = it,
-                        metadata = Metadata(
-                            tidspunkt = Instant.now(),
-                            aarsak = formidlingsgruppeHendelse.formidlingsgruppe.kode,
-                            kilde = "topic:$formidlingsgrupperTopic",
-                            utfoertAv = Bruker(
-                                type = BrukerType.SYSTEM,
-                                id = ApplicationInfo.id
-                            )
-                        )
-                    )
-                }
-        }.genericProcess("setRecordTimestamp") { record ->
+        .mapValues { _, hendelse -> avsluttet(formidlingsgrupperTopic, hendelse) }
+        .genericProcess("setRecordTimestamp") { record ->
             forward(record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli()))
-        }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), HendelseSerde()))
+        }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), AvsluttetSerde()))
     return build()
 }

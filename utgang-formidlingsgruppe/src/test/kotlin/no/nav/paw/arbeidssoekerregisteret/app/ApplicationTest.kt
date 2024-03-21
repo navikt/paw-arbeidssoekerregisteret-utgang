@@ -128,7 +128,6 @@ fun formilingsgruppeHendelse(
     FormidlingsgruppeHendelse(
         foedselsnummer = Foedselsnummer(foedselsnummer),
         formidlingsgruppe = formidlingsgruppe,
-        idFraKafkaKeyGenerator = null,
         forrigeFormidlingsgruppeEndret = null,
         formidlingsgruppeEndret = formidlingsgruppeEndret,
         forrigeFormidlingsgruppe = forrigeFormidlingsgruppe,
