@@ -62,8 +62,11 @@ fun testScope(): TestScope {
             )
         )
 
-    val pdlMockResponse1 = generatePdlMockResponse("12345678901", "doedIFolkeregisteret")
-    val pdlMockResponse2 = generatePdlMockResponse("12345678902", "bosattEtterFolkeregisterloven")
+    val pdlMockResponseDoed = generatePdlMockResponse("12345678901", "doedIFolkeregisteret")
+    val pdlMockResponseBosattEtterFolkeregisterloven =
+        generatePdlMockResponse("12345678902", "bosattEtterFolkeregisterloven")
+    val pdlMockResponseNotFound = generatePdlMockResponse("12345678903", "doedIFolkeregisteret", "not_found")
+    val pdlMockResponseBadRequest = generatePdlMockResponse("", "", "bad_request")
 
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
@@ -72,10 +75,12 @@ fun testScope(): TestScope {
             periodeTopic = periodeTopic,
             idAndRecordKeyFunction = idAndRecordKeyFunction,
             pdlHentForenkletStatus = { idents, _, _ ->
-                if (idents.contains("12345678901"))
-                    pdlMockResponse1
-                else
-                    pdlMockResponse2
+                when (idents.first()) {
+                    "12345678901" -> pdlMockResponseDoed
+                    "12345678902" -> pdlMockResponseBosattEtterFolkeregisterloven
+                    "12345678903" -> pdlMockResponseNotFound
+                    else -> pdlMockResponseBadRequest
+                }
             },
             prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         ),
@@ -99,20 +104,19 @@ fun testScope(): TestScope {
     )
 }
 
-fun generatePdlMockResponse(ident: String, forenkletStatus: String): List<HentPersonBolkResult> {
-    return listOf(HentPersonBolkResult(
-            ident,
-            person = Person(
-                listOf(
-                    Folkeregisterpersonstatus(
-                        forenkletStatus,
-                    )
-                ),
+fun generatePdlMockResponse(ident: String, forenkletStatus: String, status: String = "ok") = listOf(
+    HentPersonBolkResult(
+        ident,
+        person = Person(
+            listOf(
+                Folkeregisterpersonstatus(
+                    forenkletStatus,
+                )
             ),
-            code = "ok",
-        ))
-
-}
+        ),
+        code = status,
+    )
+)
 
 const val SCHEMA_REGISTRY_SCOPE = "mock"
 

@@ -3,8 +3,8 @@ package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.pdl.PdlHentForenkletStatus
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellAvsluttetHendelser
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellStatusKoderFraPdlHentPersonBolk
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellPdlAvsluttetHendelser
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellStatusFraPdlHentPersonBolk
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
@@ -57,17 +57,20 @@ fun scheduleAvsluttPerioder(
                     }
 
                     results.forEachIndexed { index, result ->
-                        prometheusMeterRegistry.tellStatusKoderFraPdlHentPersonBolk(result.code)
+                        prometheusMeterRegistry.tellStatusFraPdlHentPersonBolk(result.code)
+
                         val person = result.person ?: return@forEachIndexed
                         if(setOf("bad_request", "not_found").contains(result.code)) {
                             return@forEachIndexed
                         }
-                        val periode = chunk[index].value
-                        if (person.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
 
+                        if (person.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
                             val aarsaker =
                                 person.folkeregisterpersonstatus.joinToString(separator = ", ") { it.forenkletStatus }
 
+                            prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
+
+                            val periode = chunk[index].value
                             val (id, newKey) = idAndRecordKeyFunction(periode.identitetsnummer)
                             val avsluttetHendelse =
                                 Avsluttet(
@@ -85,8 +88,6 @@ fun scheduleAvsluttPerioder(
                                     )
                                 )
 
-
-                            prometheusMeterRegistry.tellAvsluttetHendelser(aarsaker)
                             val record =
                                 Record(newKey, avsluttetHendelse, avsluttetHendelse.metadata.tidspunkt.toEpochMilli())
                             ctx.forward(record)

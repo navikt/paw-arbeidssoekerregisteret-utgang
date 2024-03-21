@@ -56,4 +56,43 @@ class ApplicationTest : FreeSpec({
             hendelseloggTopic.isEmpty shouldBe true
         }
     }
+
+    "Sender ikke Avsluttet hendelse om hentPersonBolk status er 'bad_request' eller 'not_found' i PDL" {
+        with(testScope()) {
+            periodeTopic.pipeInput(
+                Periode(
+                    UUID.randomUUID(),
+                    "12345678903",
+                    Metadata(
+                        Instant.now(),
+                        Bruker(
+                            BrukerType.SLUTTBRUKER,
+                            "12345678903"
+                        ),
+                        "",
+                        ""
+                    ),
+                    null
+                )
+            )
+            periodeTopic.pipeInput(
+                Periode(
+                    UUID.randomUUID(),
+                    "12345678904",
+                    Metadata(
+                        Instant.now(),
+                        Bruker(
+                            BrukerType.SLUTTBRUKER,
+                            "12345678904"
+                        ),
+                        "",
+                        ""
+                    ),
+                    null
+                )
+            )
+            topologyTestDriver.advanceWallClockTime(Duration.ofDays(2))
+            hendelseloggTopic.isEmpty shouldBe true
+        }
+    }
 })

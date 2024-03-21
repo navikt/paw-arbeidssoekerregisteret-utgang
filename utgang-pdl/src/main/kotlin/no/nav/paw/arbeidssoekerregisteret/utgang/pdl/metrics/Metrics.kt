@@ -8,16 +8,16 @@ const val METRICS_UTGANG_PDL = "paw.arbeidssoekerregisteret.utgang.pdl"
 
 const val ANTALL_AVSLUTTET_HENDELSER = "antall_avsluttet_hendelser"
 const val AVSLUTTET_HENDELSE_AARSAK = "avsluttet_hendelse_aarsak"
-const val STATUS_KODE = "status_kode"
+const val PDL_HENT_PERSON_STATUS = "pdl_hent_person_status"
 
-fun PrometheusMeterRegistry.tellAvsluttetHendelser(aarsak: String) = counter(
+fun PrometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsak: String) = counter(
     METRICS_UTGANG_PDL,
     Tags.of(Tag.of(ANTALL_AVSLUTTET_HENDELSER, "avsluttet hendelse"), Tag.of(AVSLUTTET_HENDELSE_AARSAK, aarsak))
 ).increment()
 
-fun PrometheusMeterRegistry.tellStatusKoderFraPdlHentPersonBolk(status: String) = counter(
+fun PrometheusMeterRegistry.tellStatusFraPdlHentPersonBolk(status: String) = counter(
     METRICS_UTGANG_PDL,
-    Tags.of(Tag.of(STATUS_KODE, status))
+    Tags.of(Tag.of(PDL_HENT_PERSON_STATUS, status))
 ).increment()
 
 
