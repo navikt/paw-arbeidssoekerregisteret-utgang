@@ -4,10 +4,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.nav.paw.arbeidssoekerregisteret.app.vo.Foedselsnummer
-import no.nav.paw.arbeidssoekerregisteret.app.vo.Formidlingsgruppe
-import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
-import no.nav.paw.arbeidssoekerregisteret.app.vo.Operation
+import no.nav.paw.arbeidssoekerregisteret.app.vo.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -15,6 +12,7 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
 import java.time.*
 import java.time.Duration.between
 import java.time.Duration.ofSeconds
+import java.time.format.DateTimeFormatter
 import java.util.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata as ApiMetadata
 
@@ -23,6 +21,17 @@ class ApplicationTest : FreeSpec({
         val localNow = LocalDateTime.of(2024, Month.MARCH, 3, 15, 42)
         val instantNow = localNow.atZone(ZoneId.of("Europe/Oslo")).toInstant()
         "Verifiser applikasjonsflyt" - {
+            "Verifiser serializering/deserializering" {
+                val hendelse = formilingsgruppeHendelse(
+                    foedselsnummer = "12345678901",
+                    formidlingsgruppe = iarbs,
+                    formidlingsgruppeEndret = LocalDateTime.now()
+                )
+                val data = ArenaFormidlingsgruppeSerde().serializer().serialize("topic", hendelse)
+                println("deserialized: ${String(data)}")
+                val deserialized = ArenaFormidlingsgruppeSerde().deserializer().deserialize("topic", data)
+                deserialized shouldBe hendelse
+            }
             "Når vi mottar IARBS uten noen periode skjer det ingenting" {
                 formidlingsgruppeTopic.pipeInput(
                     formilingsgruppeHendelse(
@@ -120,20 +129,18 @@ class ApplicationTest : FreeSpec({
 fun formilingsgruppeHendelse(
     foedselsnummer: String,
     formidlingsgruppe: Formidlingsgruppe,
-    formidlingsgruppeEndret: LocalDateTime = LocalDateTime.now(),
-    forrigeFormidlingsgruppe: Formidlingsgruppe? = null,
-    operation: Operation = Operation.INSERT,
-    personStatus: String = "AKTIV"
-): FormidlingsgruppeHendelse =
-    FormidlingsgruppeHendelse(
-        foedselsnummer = Foedselsnummer(foedselsnummer),
-        formidlingsgruppe = formidlingsgruppe,
-        forrigeFormidlingsgruppeEndret = null,
-        formidlingsgruppeEndret = formidlingsgruppeEndret,
-        forrigeFormidlingsgruppe = forrigeFormidlingsgruppe,
-        personId = foedselsnummer,
-        operation = operation,
-        personIdStatus = personStatus
+    formidlingsgruppeEndret: LocalDateTime = LocalDateTime.now()
+): ArenaFormidlingsruppe =
+    ArenaFormidlingsruppe(
+        op_type = "insert",
+        after = ArenaData(
+            personId = "vi leser ikke denne",
+            personIdStatus = "vi leser ikke denne heller",
+            fodselsnr = foedselsnummer,
+            formidlingsgruppekode = formidlingsgruppe.kode,
+            modDato = formidlingsgruppeEndret.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        ),
+        before = null
     )
 
 val iarbs = Formidlingsgruppe("IARBS")

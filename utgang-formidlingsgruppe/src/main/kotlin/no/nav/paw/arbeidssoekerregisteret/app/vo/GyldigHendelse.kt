@@ -15,6 +15,10 @@ data class GyldigHendelse(
     val formidlingsgruppeEndret: Instant,
 )
 
+data class Formidlingsgruppe(val kode: String)
+
+data class Foedselsnummer(val foedselsnummer: String)
+
 fun avsluttet(topic: String, hendelse: GyldigHendelse): Avsluttet =
     Avsluttet(
         hendelseId = UUID.randomUUID(),
@@ -30,3 +34,4 @@ fun avsluttet(topic: String, hendelse: GyldigHendelse): Avsluttet =
             )
         )
     )
+

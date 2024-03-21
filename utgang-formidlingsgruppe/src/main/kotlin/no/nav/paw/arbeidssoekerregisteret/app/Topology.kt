@@ -7,10 +7,6 @@ import no.nav.paw.arbeidssoekerregisteret.app.functions.lagreEllerSlettPeriode
 import no.nav.paw.arbeidssoekerregisteret.app.functions.mapNonNull
 import no.nav.paw.arbeidssoekerregisteret.app.vo.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
-import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
-import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
-import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
@@ -19,7 +15,6 @@ import org.apache.kafka.streams.kstream.Consumed
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.Repartitioned
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.util.*
 
 fun StreamsBuilder.appTopology(
@@ -30,7 +25,7 @@ fun StreamsBuilder.appTopology(
     formidlingsgrupperTopic: String,
     hendelseLoggTopic: String
 ): Topology {
-    val formidlingsgruppeHendelseSerde = FormidlingsgruppeHendelseSerde()
+    val arenaFormidlingsgruppeSerde = ArenaFormidlingsgruppeSerde()
     val logger = LoggerFactory.getLogger("topology")
     stream<Long, Periode>(periodeTopic)
         .lagreEllerSlettPeriode(
@@ -39,14 +34,7 @@ fun StreamsBuilder.appTopology(
             arbeidssoekerIdFun = idAndRecordKeyFunction
         )
 
-    stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
-        .peek { _, hendelse ->
-            logger.info(
-                "Mottatt hendelse: foedselnummer=${hendelse.foedselsnummer != null}, " +
-                        "formidlingsgruppe=${hendelse.formidlingsgruppe != null}, " +
-                        "formidlingsgruppeEndret=${hendelse.formidlingsgruppeEndret != null}"
-            )
-        }
+    stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), arenaFormidlingsgruppeSerde))
         .mapNonNull("mapTilGyldigHendelse") { formidlingsgruppeHendelse ->
             formidlingsgruppeHendelse.validValuesOrNull()
                 .also { gyldigeVerdier ->

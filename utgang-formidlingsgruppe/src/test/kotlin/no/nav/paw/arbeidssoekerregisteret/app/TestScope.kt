@@ -6,8 +6,8 @@ import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
-import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelse
-import no.nav.paw.arbeidssoekerregisteret.app.vo.FormidlingsgruppeHendelseSerde
+import no.nav.paw.arbeidssoekerregisteret.app.vo.ArenaFormidlingsgruppeSerde
+import no.nav.paw.arbeidssoekerregisteret.app.vo.ArenaFormidlingsruppe
 import no.nav.paw.arbeidssoekerregisteret.app.vo.AvsluttetSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
@@ -27,7 +27,7 @@ import java.util.*
 
 data class TestScope(
     val periodeTopic: TestInputTopic<Long, Periode>,
-    val formidlingsgruppeTopic: TestInputTopic<String, FormidlingsgruppeHendelse>,
+    val formidlingsgruppeTopic: TestInputTopic<String, ArenaFormidlingsruppe>,
     val hendelseloggTopic: TestOutputTopic<Long, Avsluttet>,
     val kevValueStore: KeyValueStore<Long, Period>,
     val topologyTestDriver: TopologyTestDriver,
@@ -47,7 +47,7 @@ fun testScope(): TestScope {
         }
     }
     val periodeSerde = createAvroSerde<Periode>()
-    val formidlingsgruppeSerde = FormidlingsgruppeHendelseSerde()
+    val formidlingsgruppeSerde = ArenaFormidlingsgruppeSerde()
     val avsluttetSerde = AvsluttetSerde()
     val stateStoreName = "stateStore"
     val streamBuilder = StreamsBuilder()
