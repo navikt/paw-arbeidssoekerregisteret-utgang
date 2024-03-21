@@ -43,16 +43,19 @@ class FormidlingsgruppeFilter(
         val ctx = requireNotNull(context) { "Context is not initialized" }
         val hendelse = record.value()
         val periodeStartTime = store.get(hendelse.id)?.startet?.tidspunkt
-        val requestedStopTime = hendelse.formidlingsgruppeEndret
-        val diffStartTilStopp = between(periodeStartTime, requestedStopTime)
-        val resultat = when {
-            periodeStartTime == null -> FilterResultat.INGEN_PERIODE
-            diffStartTilStopp > ZERO -> FilterResultat.INKLUDER
-            diffStartTilStopp < (-8).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_8_
-            diffStartTilStopp < (-4).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_4_8H
-            diffStartTilStopp < (-2).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_2_4H
-            diffStartTilStopp < (-1).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_1_2H
-            else -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_0_1H
+        val resultat = if (periodeStartTime == null) {
+            FilterResultat.INGEN_PERIODE
+        } else {
+            val requestedStopTime = hendelse.formidlingsgruppeEndret
+            val diffStartTilStopp = between(periodeStartTime, requestedStopTime)
+            when {
+                diffStartTilStopp > ZERO -> FilterResultat.INKLUDER
+                diffStartTilStopp < (-8).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_8_
+                diffStartTilStopp < (-4).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_4_8H
+                diffStartTilStopp < (-2).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_2_4H
+                diffStartTilStopp < (-1).timer -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_1_2H
+                else -> FilterResultat.IGNORER_PERIODE_STARTET_ETTER_0_1H
+            }
         }
         prometheusMeterRegistry.tellFilterResultat(resultat)
         if (resultat == FilterResultat.INKLUDER) {
