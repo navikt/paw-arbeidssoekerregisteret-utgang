@@ -18,6 +18,7 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.Repartitioned
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 
@@ -30,6 +31,7 @@ fun StreamsBuilder.appTopology(
     hendelseLoggTopic: String
 ): Topology {
     val formidlingsgruppeHendelseSerde = FormidlingsgruppeHendelseSerde()
+    val logger = LoggerFactory.getLogger("topology")
     stream<Long, Periode>(periodeTopic)
         .lagreEllerSlettPeriode(
             stateStoreName = stateStoreName,
@@ -38,6 +40,13 @@ fun StreamsBuilder.appTopology(
         )
 
     stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
+        .peek { _, hendelse ->
+            logger.info(
+                "Mottatt hendelse: foedselnummer=${hendelse.foedselsnummer != null}, " +
+                        "formidlingsgruppe=${hendelse.formidlingsgruppe != null}, " +
+                        "formidlingsgruppeEndret=${hendelse.formidlingsgruppeEndret != null}"
+            )
+        }
         .mapNonNull("mapTilGyldigHendelse") { formidlingsgruppeHendelse ->
             formidlingsgruppeHendelse.validValuesOrNull()
                 .also { gyldigeVerdier ->

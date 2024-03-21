@@ -34,7 +34,7 @@ import java.util.*
 
 const val partitionCount: Int = 6
 
-const val applicationStreamVersion = "v2"
+const val applicationStreamVersion = "v3"
 const val periodeTopic = "paw.arbeidssokerperioder-v1"
 const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-v1"
 
