@@ -36,6 +36,7 @@ fun StreamsBuilder.appTopology(
             prometheusMeterRegistry = prometheusRegistry,
             arbeidssoekerIdFun = idAndRecordKeyFunction
         )
+
     stream(formidlingsgrupperTopic, Consumed.with(Serdes.String(), formidlingsgruppeHendelseSerde))
         .mapNonNull("mapTilGyldigHendelse") { formidlingsgruppeHendelse ->
             formidlingsgruppeHendelse.validValuesOrNull()
