@@ -52,7 +52,7 @@ java {
 }
 
 application {
-    mainClass = "no.nav.paw.arbeidssokerregisteret.utgang.pdl.Startup"
+    mainClass = "no.nav.paw.arbeidssokerregisteret.utgang.pdl.StartupKt"
 }
 
 jib {
