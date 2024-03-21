@@ -1,5 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.app.vo
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,6 +11,7 @@ import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serializer
+import org.slf4j.LoggerFactory
 
 class FormidlingsgruppeHendelseSerde: Serde<FormidlingsgruppeHendelse> {
     override fun serializer() = FormidlingsgruppeHendelseSerializer()
@@ -26,6 +28,9 @@ class FormidlingsgruppeHendelseSerializer() : Serializer<FormidlingsgruppeHendel
 class FormidlingsgruppeHendelseDeserializer(): Deserializer<FormidlingsgruppeHendelse> {
     override fun deserialize(topic: String?, data: ByteArray?): FormidlingsgruppeHendelse? {
         if (data == null) return null
+        val map = hendelseObjectMapper.readTree(data)
+        LoggerFactory.getLogger("FormidlingsgruppeHendelseDeserializer")
+            .info("Mottatt hendelse: ${map.fieldNames().asSequence().toList()}")
         return hendelseObjectMapper.readValue(data)
     }
 
