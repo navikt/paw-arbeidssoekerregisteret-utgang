@@ -7,8 +7,6 @@ import no.nav.paw.arbeidssoekerregisteret.app.functions.lagreEllerSlettPeriode
 import no.nav.paw.arbeidssoekerregisteret.app.functions.mapNonNull
 import no.nav.paw.arbeidssoekerregisteret.app.vo.*
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.paw.kafkakeygenerator.auth.NaisEnv
-import no.nav.paw.kafkakeygenerator.auth.currentNaisEnv
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
@@ -53,9 +51,6 @@ fun StreamsBuilder.appTopology(
             }
         }
         .map { _, (foedselsnummer, formidlingsgruppe, tidspunkt) ->
-            if (currentNaisEnv == NaisEnv.DevGCP) {
-                logger.info("[${currentNaisEnv}] Behandler hendelse for fnr: $foedselsnummer")
-            }
             val (id, newKey) = idAndRecordKeyFunction(foedselsnummer.foedselsnummer)
             KeyValue(
                 newKey, GyldigHendelse(
