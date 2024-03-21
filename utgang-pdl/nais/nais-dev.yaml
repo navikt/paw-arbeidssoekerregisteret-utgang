@@ -42,9 +42,8 @@ spec:
       enabled: true
       runtime: java
   accessPolicy:
-    inbound:
-      rules:
     outbound:
       rules:
+        - application: paw-kafka-key-generator
       external:
         - host: pdl-api.dev-fss-pub.nais.io
