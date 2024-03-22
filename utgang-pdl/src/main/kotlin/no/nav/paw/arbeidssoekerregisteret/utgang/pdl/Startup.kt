@@ -53,11 +53,12 @@ fun main() {
         topology,
         StreamsConfig(streamsConfig.properties)
     )
-
     kafkaStreams.setUncaughtExceptionHandler { throwable ->
         logger.error("Uventet feil: ${throwable.message}", throwable)
         StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
     }
+    kafkaStreams.start()
+
     initKtor(
         kafkaStreamsMetrics = KafkaStreamsMetrics(kafkaStreams),
         prometheusRegistry = prometheusMeterRegistry,
