@@ -20,9 +20,6 @@ import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler
 import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
 
-const val periodeTopic = "paw.arbeidssokerperioder-v1"
-const val hendelsesLogTopic = "paw.arbeidssoker-hendelseslogg-v1"
-
 fun main() {
     val logger = LoggerFactory.getLogger("app")
     logger.info("Starter: {}", ApplicationInfo.id)
@@ -49,8 +46,8 @@ fun main() {
         "aktivePerioder",
         idAndRecordKeyFunction,
         pdlHentForenkletStatus = PdlHentForenkletStatus.create(),
-        periodeTopic,
-        hendelsesLogTopic
+        applicationConfiguration.periodeTopic,
+        applicationConfiguration.hendelseloggTopic
     )
     val kafkaStreams = KafkaStreams(
         topology,
