@@ -50,6 +50,7 @@ fun StreamsBuilder.appTopology(
         .mapNonNull("getKeyOrNull") { value ->
             idAndRecordKeyFunction(value.first.foedselsnummer)
                 ?.let { idAndKey -> idAndKey to value }
+                .also { if (it == null) prometheusRegistry.tellIkkeIPDL()}
         }
         .map { _, (idAndKey, value) ->
             val (id, newKey) = idAndKey

@@ -19,6 +19,13 @@ fun PrometheusMeterRegistry.tellUgyldigHendelse() {
     ).increment()
 }
 
+fun PrometheusMeterRegistry.tellIkkeIPDL() {
+    counter(
+        "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
+        listOf(Tag.of("resultat", "not_in_pdl"))
+    ).increment()
+}
+
 fun PrometheusMeterRegistry.tellIgnorertGrunnetFormidlingsgruppe(formidlingsgruppe: Formidlingsgruppe) {
     counter(
         "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
