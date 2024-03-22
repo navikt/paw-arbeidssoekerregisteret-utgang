@@ -31,14 +31,14 @@ spec:
       cpu: 1000m
       memory: 1024Mi
   liveness:
-    path: /internal/isAlive
+    path: /isAlive
     initialDelay: 10
   readiness:
-    path: /internal/isReady
+    path: /isReady
     initialDelay: 10
   prometheus:
     enabled: true
-    path: /internal/metrics
+    path: /metrics
   observability:
     autoInstrumentation:
       enabled: true
