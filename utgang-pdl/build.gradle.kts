@@ -18,6 +18,10 @@ dependencies {
     implementation(project(":main-avro-schema-classes"))
     implementation(pawObservability.bundles.ktorNettyOpentelemetryMicrometerPrometheus)
 
+    implementation(loggingLibs.logbackClassic)
+    implementation(loggingLibs.logstashLogbackEncoder)
+    implementation(navCommon.log)
+
     implementation(pawUtils.kafkaStreams)
     implementation(pawUtils.kafka)
     implementation(pawUtils.hopliteConfig)

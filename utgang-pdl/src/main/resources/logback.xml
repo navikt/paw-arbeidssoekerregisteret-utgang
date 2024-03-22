@@ -10,7 +10,6 @@
         </encoder>
     </appender>
 
-
     <if condition='"${NAIS_CLUSTER_NAME}" == "NAIS_CLUSTER_NAME_IS_UNDEFINED"'>
         <then>
             <root level="INFO">
