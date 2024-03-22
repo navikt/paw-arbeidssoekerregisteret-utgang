@@ -21,7 +21,7 @@ import org.apache.kafka.streams.state.Stores
 import org.slf4j.LoggerFactory
 
 fun main() {
-    val logger = LoggerFactory.getLogger("app")
+    val logger = LoggerFactory.getLogger("utgang-pdl")
     logger.info("Starter: {}", ApplicationInfo.id)
     val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 

@@ -14,8 +14,6 @@ import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
 import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.Repartitioned
-import org.slf4j.LoggerFactory
-import java.util.*
 
 fun StreamsBuilder.appTopology(
     prometheusRegistry: PrometheusMeterRegistry,
@@ -26,7 +24,6 @@ fun StreamsBuilder.appTopology(
     hendelseLoggTopic: String
 ): Topology {
     val arenaFormidlingsgruppeSerde = ArenaFormidlingsgruppeSerde()
-    val logger = LoggerFactory.getLogger("topology")
     stream<Long, Periode>(periodeTopic)
         .lagreEllerSlettPeriode(
             stateStoreName = stateStoreName,
