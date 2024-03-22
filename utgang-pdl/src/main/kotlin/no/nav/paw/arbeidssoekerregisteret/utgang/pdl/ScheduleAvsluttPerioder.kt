@@ -23,7 +23,7 @@ import java.util.*
 fun scheduleAvsluttPerioder(
     ctx: ProcessorContext<Long, Avsluttet>,
     stateStore: KeyValueStore<Long, Periode>,
-    interval: Duration = Duration.ofDays(1),
+    interval: Duration = Duration.ofMinutes(1), // TODO: Setter interval til 10 min for testing (orginalt 1 dag)
     idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
     pdlHentForenkletStatus: PdlHentForenkletStatus,
     prometheusMeterRegistry: PrometheusMeterRegistry,
@@ -36,7 +36,7 @@ fun scheduleAvsluttPerioder(
             iterator
                 .asSequence()
                 .toList()
-                .chunked(100) { chunk ->
+                .chunked(1000) { chunk ->
                     val identitetsnummere = chunk.map { it.value.identitetsnummer }
 
                     val results =
