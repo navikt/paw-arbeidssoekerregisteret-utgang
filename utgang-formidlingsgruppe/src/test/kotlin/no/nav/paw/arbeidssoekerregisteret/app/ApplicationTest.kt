@@ -101,7 +101,7 @@ class ApplicationTest : FreeSpec({
                 val kv = hendelseloggTopic.readKeyValue()
                 kv.key shouldBe 1L
                 kv.value.shouldBeInstanceOf<Avsluttet>()
-                kv.value.id shouldBe kafkaKeysClient(periodeStart.identitetsnummer).id
+                kv.value.id shouldBe kafkaKeysClient(periodeStart.identitetsnummer)?.id
                 between(kv.value.metadata.tidspunkt, Instant.now()).abs() shouldBeLessThan ofSeconds(60)
             }
             "Når perioden stoppes slettes den fra state store" {

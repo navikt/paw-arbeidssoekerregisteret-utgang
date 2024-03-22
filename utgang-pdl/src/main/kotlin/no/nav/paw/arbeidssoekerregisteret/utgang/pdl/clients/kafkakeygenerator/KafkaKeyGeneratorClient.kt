@@ -14,12 +14,12 @@ fun createIdAndRecordKeyFunction(): KafkaIdAndRecordKeyFunction =
         KafkaIdAndRecordKeyFunction { identitetsnummer ->
             runBlocking {
                 getIdAndKey(identitetsnummer)
-                    .let {
+                    ?.let {
                         IdAndRecordKey(
                             id = it.id,
                             recordKey = it.key
                         )
-                    }
+                    } ?: throw RuntimeException("Kunne ikke hente kafka key (404 not found svar fra kafka key generator)")
             }
         }
     }

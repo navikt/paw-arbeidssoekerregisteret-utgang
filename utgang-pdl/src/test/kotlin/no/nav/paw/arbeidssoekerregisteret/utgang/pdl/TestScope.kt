@@ -41,12 +41,12 @@ fun testScope(): TestScope {
     val idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction = with(inMemoryKafkaKeysMock()) {
         KafkaIdAndRecordKeyFunction { identitetsnummer ->
             runBlocking { getIdAndKey(identitetsnummer) }
-                .let {
+                ?.let {
                     IdAndRecordKey(
                         id = it.id,
                         recordKey = it.key
                     )
-                }
+                } ?: throw Exception("Kunne ikke hente kafka key (404 not found svar fra kafka key generator)")
         }
     }
 

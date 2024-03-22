@@ -46,7 +46,13 @@ class PeriodeProsessor(
                 val elements = kvStore.all().use { iterator ->
                     iterator.asSequence().count()
                 }
-                logger.info("Partition $partition has $elements elements, and stream time: ${Instant.ofEpochMilli(context.currentStreamTimeMs())}")
+                logger.info(
+                    "Partition $partition has $elements elements, and stream time: ${
+                        Instant.ofEpochMilli(
+                            context.currentStreamTimeMs()
+                        )
+                    }"
+                )
             }
         }
     }
@@ -54,7 +60,8 @@ class PeriodeProsessor(
     override fun process(record: Record<Long, Periode>?) {
         if (record == null) return
         val store = requireNotNull(stateStore) { "State store is not initialized" }
-        val storeKey = arbeidssoekerIdFun(record.value().identitetsnummer).id
+        val storeKey = arbeidssoekerIdFun(record.value().identitetsnummer)?.id
+            ?: throw IllegalStateException("Kunne ikke hente id fra kafka key, (404)")
         if (record.value().avsluttet == null) {
             store.put(storeKey, record.value())
         } else {

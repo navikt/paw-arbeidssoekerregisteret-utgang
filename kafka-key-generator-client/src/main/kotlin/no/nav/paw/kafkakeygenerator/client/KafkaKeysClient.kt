@@ -18,7 +18,7 @@ data class KafkaKeysRequest(
 )
 
 interface KafkaKeysClient {
-    suspend fun getIdAndKey(identitetsnummer: String): KafkaKeysResponse
+    suspend fun getIdAndKey(identitetsnummer: String): KafkaKeysResponse?
 }
 
 class StandardKafkaKeysClient(
@@ -26,16 +26,21 @@ class StandardKafkaKeysClient(
     private val kafkaKeysUrl: String,
     private val getAccessToken: () -> String
 ) : KafkaKeysClient {
-    override suspend fun getIdAndKey(identitetsnummer: String): KafkaKeysResponse =
+    override suspend fun getIdAndKey(identitetsnummer: String): KafkaKeysResponse? =
         httpClient.post(kafkaKeysUrl) {
             header("Authorization", "Bearer ${getAccessToken()}")
             contentType(ContentType.Application.Json)
             setBody(KafkaKeysRequest(identitetsnummer))
         }.let { response ->
-            if (response.status == io.ktor.http.HttpStatusCode.OK) {
-                response.body<KafkaKeysResponse>()
-            } else {
-                throw Exception("Kunne ikke hente kafka key, http_status=${response.status}, melding=${response.body<String>()}")
+            when (response.status) {
+                io.ktor.http.HttpStatusCode.OK -> {
+                    response.body<KafkaKeysResponse>()
+                }
+
+                io.ktor.http.HttpStatusCode.NotFound -> null
+                else -> {
+                    throw Exception("Kunne ikke hente kafka key, http_status=${response.status}, melding=${response.body<String>()}")
+                }
             }
         }
 }

@@ -7,7 +7,7 @@ fun createIdAndRecordKeyFunction(): KafkaIdAndRecordKeyFunction =
         KafkaIdAndRecordKeyFunction { identitetsnummer ->
             runBlocking {
                 getIdAndKey(identitetsnummer)
-                    .let {
+                    ?.let {
                         IdAndRecordKey(
                             id = it.id,
                             recordKey = it.key
@@ -18,7 +18,7 @@ fun createIdAndRecordKeyFunction(): KafkaIdAndRecordKeyFunction =
     }
 
 fun interface KafkaIdAndRecordKeyFunction {
-    operator fun invoke(identitetsnummer: String): IdAndRecordKey
+    operator fun invoke(identitetsnummer: String): IdAndRecordKey?
 }
 
 data class IdAndRecordKey(

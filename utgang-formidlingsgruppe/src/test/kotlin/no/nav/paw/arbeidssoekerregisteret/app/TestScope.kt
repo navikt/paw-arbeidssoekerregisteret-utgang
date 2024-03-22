@@ -38,7 +38,7 @@ fun testScope(): TestScope {
     val idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction = with(inMemoryKafkaKeysMock()) {
         KafkaIdAndRecordKeyFunction { identitetsnummer ->
             runBlocking { getIdAndKey(identitetsnummer) }
-                .let {
+                ?.let {
                     IdAndRecordKey(
                         id = it.id,
                         recordKey = it.key

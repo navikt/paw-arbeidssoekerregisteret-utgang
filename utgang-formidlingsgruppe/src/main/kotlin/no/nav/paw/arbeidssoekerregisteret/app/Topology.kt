@@ -47,8 +47,13 @@ fun StreamsBuilder.appTopology(
                 }
             }
         }
-        .map { _, (foedselsnummer, formidlingsgruppe, tidspunkt) ->
-            val (id, newKey) = idAndRecordKeyFunction(foedselsnummer.foedselsnummer)
+        .mapNonNull("getKeyOrNull") { value ->
+            idAndRecordKeyFunction(value.first.foedselsnummer)
+                ?.let { idAndKey -> idAndKey to value }
+        }
+        .map { _, (idAndKey, value) ->
+            val (id, newKey) = idAndKey
+            val (foedselsnummer, formidlingsgruppe, tidspunkt) = value
             KeyValue(
                 newKey, GyldigHendelse(
                     id = id,
