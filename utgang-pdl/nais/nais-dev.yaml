@@ -8,6 +8,8 @@ metadata:
 spec:
   image: {{ image }}
   env:
+    - name: KAFKA_KEYS_SCOPE
+      value: api://dev-gcp.paw.paw-kafka-key-generator/.default
     - name: PDL_SCOPE
       value: "api://dev-fss.pdl.pdl-api/.default"
     - name: PDL_URL
