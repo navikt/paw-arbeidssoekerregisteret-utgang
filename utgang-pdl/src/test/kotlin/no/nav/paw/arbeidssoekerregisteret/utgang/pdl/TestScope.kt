@@ -11,6 +11,7 @@ import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.K
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
+import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
@@ -48,6 +49,8 @@ fun testScope(): TestScope {
                 }
         }
     }
+
+    val (periodeTopic, hendelsesLogTopic) = loadNaisOrLocalConfiguration<ApplicationConfiguration>(APPLICATION_CONFIG_FILE)
 
     val periodeSerde = createAvroSerde<Periode>()
     val hendelseSerde = HendelseSerde()
