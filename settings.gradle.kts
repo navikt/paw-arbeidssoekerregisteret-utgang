@@ -29,7 +29,7 @@ dependencyResolutionManagement {
         val pawUtilsVersion = "24.02.06.10-1"
         val pawPdlClientVersion = "24.03.20.30-1"
         val pawAaregClientVersion = "24.01.12.16-1"
-        val interneEventerVersion = "24.03.13.154-1"
+        val interneEventerVersion = "24.04.02.165-1"
         val arbeidssokerregisteretVersion = "1.8062260419.22-1"
 
         val orgApacheKafkaVersion = "3.6.0"

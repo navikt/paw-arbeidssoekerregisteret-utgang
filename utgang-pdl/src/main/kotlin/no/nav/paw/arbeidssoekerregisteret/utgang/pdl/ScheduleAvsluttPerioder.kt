@@ -7,10 +7,13 @@ import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellPdlAvsluttetHen
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.metrics.tellStatusFraPdlHentPersonBolk
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
+import no.nav.paw.arbeidssokerregisteret.intern.v1.Startet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
+import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Opplysning
 import no.nav.paw.pdl.PdlException
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
 import org.apache.kafka.streams.processor.PunctuationType
 import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
@@ -22,8 +25,9 @@ import java.util.*
 
 fun scheduleAvsluttPerioder(
     ctx: ProcessorContext<Long, Avsluttet>,
-    stateStore: KeyValueStore<Long, Periode>,
-    interval: Duration = Duration.ofMinutes(1), // TODO: Setter interval til 10 min for testing (orginalt 1 dag)
+    periodeStateStore: KeyValueStore<Long, Periode>,
+    hendelseStateStore: KeyValueStore<Long, Startet>,
+    interval: Duration = Duration.ofDays(1),
     idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
     pdlHentForenkletStatus: PdlHentForenkletStatus,
     prometheusMeterRegistry: PrometheusMeterRegistry,
@@ -32,7 +36,7 @@ fun scheduleAvsluttPerioder(
     val logger = LoggerFactory.getLogger("scheduleAvsluttPerioder")
 
     try {
-        stateStore.all().use { iterator ->
+        periodeStateStore.all().use { iterator ->
             iterator
                 .asSequence()
                 .toList()
@@ -60,18 +64,25 @@ fun scheduleAvsluttPerioder(
                         prometheusMeterRegistry.tellStatusFraPdlHentPersonBolk(result.code)
 
                         val person = result.person ?: return@forEachIndexed
-                        if(setOf("bad_request", "not_found").contains(result.code)) {
+                        if (setOf("bad_request", "not_found").contains(result.code)) {
                             return@forEachIndexed
                         }
 
                         if (person.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
+                            val periode = chunk[index].value
+                            val (id, newKey) = idAndRecordKeyFunction(periode.identitetsnummer)
+                            val startetHendelse = hendelseStateStore.get(id)
+                            val opplysningerFraStartetHendelse = startetHendelse?.opplysninger ?: emptySet()
+
+                            if (opplysningerFraStartetHendelse.overlapperForhaandsgodkjenningMedForenkletStatus(person.folkeregisterpersonstatus)) {
+                                return@forEachIndexed
+                            }
+
                             val aarsaker =
                                 person.folkeregisterpersonstatus.joinToString(separator = ", ") { it.forenkletStatus }
 
                             prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
 
-                            val periode = chunk[index].value
-                            val (id, newKey) = idAndRecordKeyFunction(periode.identitetsnummer)
                             val avsluttetHendelse =
                                 Avsluttet(
                                     hendelseId = UUID.randomUUID(),
@@ -98,5 +109,26 @@ fun scheduleAvsluttPerioder(
     } catch (e: Exception) {
         logger.error("Feil i skedulert oppgave: $e", e)
         throw e
+    }
+}
+
+fun Set<Opplysning>.overlapperForhaandsgodkjenningMedForenkletStatus(folkeregisterpersonstatus: List<Folkeregisterpersonstatus>): Boolean {
+    if (this.isEmpty()) {
+        return false
+    }
+
+    if (Opplysning.ER_UNDER_18_AAR in this) {
+        return true
+    }
+
+    return folkeregisterpersonstatus.any { status ->
+        when (status.forenkletStatus) {
+            "ikkeBosatt" -> Opplysning.IKKE_BOSATT in this
+            "forsvunnet" -> Opplysning.SAVNET in this
+            "doedIFolkeregisteret" -> Opplysning.DOED in this
+            "opphoert" -> Opplysning.OPPHOERT_IDENTITET in this
+            "dNummer" -> Opplysning.DNUMMER in this
+            else -> false
+        }
     }
 }

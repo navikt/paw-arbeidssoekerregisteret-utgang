@@ -10,7 +10,8 @@ import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.I
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.clients.kafkakeygenerator.KafkaIdAndRecordKeyFunction
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo.HendelseSerde
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.paw.arbeidssokerregisteret.intern.v1.Avsluttet
+import no.nav.paw.arbeidssokerregisteret.intern.v1.Hendelse
+import no.nav.paw.arbeidssokerregisteret.intern.v1.Startet
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
 import no.nav.paw.kafkakeygenerator.client.inMemoryKafkaKeysMock
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
@@ -32,8 +33,10 @@ import java.util.*
 
 data class TestScope(
     val periodeTopic: TestInputTopic<Long, Periode>,
-    val hendelseloggTopic: TestOutputTopic<Long, Avsluttet>,
-    val kevValueStore: KeyValueStore<Long, Periode>,
+    val hendelseLoggInputTopic: TestInputTopic<Long, Hendelse>,
+    val hendelseloggOutputTopic: TestOutputTopic<Long, Hendelse>,
+    val periodeKeyValueStore: KeyValueStore<Long, Periode>,
+    val hendelseKeyValueStore: KeyValueStore<Long, Startet>,
     val topologyTestDriver: TopologyTestDriver
 )
 
@@ -50,17 +53,30 @@ fun testScope(): TestScope {
         }
     }
 
-    val (periodeTopic, hendelsesLogTopic) = loadNaisOrLocalConfiguration<ApplicationConfiguration>(APPLICATION_CONFIG_FILE)
+    val (periodeTopic, hendelsesLoggTopic) = loadNaisOrLocalConfiguration<ApplicationConfiguration>(
+        APPLICATION_CONFIG_FILE
+    )
 
     val periodeSerde = createAvroSerde<Periode>()
     val hendelseSerde = HendelseSerde()
-    val stateStoreName = "stateStore"
+
+    val periodeStateStoreName = "periodeStateStore"
+    val hendelseStateStoreName = "hendelseStateStore"
+
     val streamBuilder = StreamsBuilder()
         .addStateStore(
             KeyValueStoreBuilder(
-                InMemoryKeyValueBytesStoreSupplier(stateStoreName),
+                InMemoryKeyValueBytesStoreSupplier(periodeStateStoreName),
                 Serdes.Long(),
                 periodeSerde,
+                Time.SYSTEM
+            )
+        )
+        .addStateStore(
+            KeyValueStoreBuilder(
+                InMemoryKeyValueBytesStoreSupplier(hendelseStateStoreName),
+                Serdes.Long(),
+                hendelseSerde,
                 Time.SYSTEM
             )
         )
@@ -69,19 +85,22 @@ fun testScope(): TestScope {
     val pdlMockResponseBosattEtterFolkeregisterloven =
         generatePdlMockResponse("12345678902", "bosattEtterFolkeregisterloven")
     val pdlMockResponseNotFound = generatePdlMockResponse("12345678903", "doedIFolkeregisteret", "not_found")
+    val pdlMockResponseIkkeBosatt = generatePdlMockResponse("12345678904", "ikkeBosatt")
     val pdlMockResponseBadRequest = generatePdlMockResponse("", "", "bad_request")
 
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
-            stateStoreName = stateStoreName,
-            hendelseLoggTopic = hendelsesLogTopic,
+            periodeStateStoreName = periodeStateStoreName,
+            hendelseStateStoreName = hendelseStateStoreName,
             periodeTopic = periodeTopic,
+            hendelseLoggTopic = hendelsesLoggTopic,
             idAndRecordKeyFunction = idAndRecordKeyFunction,
             pdlHentForenkletStatus = { idents, _, _ ->
                 when (idents.first()) {
                     "12345678901" -> pdlMockResponseDoed
                     "12345678902" -> pdlMockResponseBosattEtterFolkeregisterloven
                     "12345678903" -> pdlMockResponseNotFound
+                    "12345678904" -> pdlMockResponseIkkeBosatt
                     else -> pdlMockResponseBadRequest
                 }
             },
@@ -94,15 +113,22 @@ fun testScope(): TestScope {
         Serdes.Long().serializer(),
         periodeSerde.serializer()
     )
+    val hendelseInputTopic = testDriver.createInputTopic(
+        hendelsesLoggTopic,
+        Serdes.Long().serializer(),
+        hendelseSerde.serializer()
+    )
     val hendelseOutputTopic = testDriver.createOutputTopic(
-        hendelsesLogTopic,
+        hendelsesLoggTopic,
         Serdes.Long().deserializer(),
         hendelseSerde.deserializer()
     )
     return TestScope(
         periodeTopic = periodeInputTopic,
-        hendelseloggTopic = hendelseOutputTopic,
-        kevValueStore = testDriver.getKeyValueStore(stateStoreName),
+        hendelseLoggInputTopic = hendelseInputTopic,
+        hendelseloggOutputTopic = hendelseOutputTopic,
+        periodeKeyValueStore = testDriver.getKeyValueStore(periodeStateStoreName),
+        hendelseKeyValueStore = testDriver.getKeyValueStore(hendelseStateStoreName),
         topologyTestDriver = testDriver
     )
 }

@@ -5,5 +5,6 @@ data class ApplicationConfiguration(
     val periodeTopic: String,
     val hendelseloggTopic: String,
     val applicationIdSuffix: String,
-    val aktivePerioderStateStoreName: String
+    val aktivePerioderStateStoreName: String,
+    val forhaandsgodkjenteHendelserStateStoreName: String
 )

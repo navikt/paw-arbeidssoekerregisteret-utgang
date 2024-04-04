@@ -41,9 +41,17 @@ fun main() {
                 streamsConfig.createSpecificAvroSerde()
             )
         )
+        .addStateStore(
+            Stores.keyValueStoreBuilder(
+                Stores.persistentKeyValueStore(applicationConfiguration.forhaandsgodkjenteHendelserStateStoreName),
+                Serdes.Long(),
+                streamsConfig.createSpecificAvroSerde()
+            )
+        )
     val topology = streamsBuilder.appTopology(
         prometheusMeterRegistry,
         "aktivePerioder",
+        "forhaandsgodkjenteHendelser",
         idAndRecordKeyFunction,
         pdlHentForenkletStatus = PdlHentForenkletStatus.create(),
         applicationConfiguration.periodeTopic,
