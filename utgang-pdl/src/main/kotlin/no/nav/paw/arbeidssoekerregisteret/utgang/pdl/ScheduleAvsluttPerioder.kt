@@ -117,10 +117,6 @@ fun Set<Opplysning>.overlapperForhaandsgodkjenningMedForenkletStatus(folkeregist
         return false
     }
 
-    if (Opplysning.ER_UNDER_18_AAR in this) {
-        return true
-    }
-
     return folkeregisterpersonstatus.any { status ->
         when (status.forenkletStatus) {
             "ikkeBosatt" -> Opplysning.IKKE_BOSATT in this
