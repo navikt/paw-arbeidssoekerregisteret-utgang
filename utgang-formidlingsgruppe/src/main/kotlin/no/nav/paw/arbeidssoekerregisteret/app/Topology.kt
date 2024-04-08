@@ -21,7 +21,7 @@ fun StreamsBuilder.appTopology(
     idAndRecordKeyFunction: KafkaIdAndRecordKeyFunction,
     periodeTopic: String,
     formidlingsgrupperTopic: String,
-    hendelseLoggTopic: String
+    hendelseloggTopic: String
 ): Topology {
     val arenaFormidlingsgruppeSerde = ArenaFormidlingsgruppeSerde()
     stream<Long, Periode>(periodeTopic)
@@ -77,6 +77,6 @@ fun StreamsBuilder.appTopology(
         .mapValues { _, hendelse -> avsluttet(formidlingsgrupperTopic, hendelse) }
         .genericProcess("setRecordTimestamp") { record ->
             forward(record.withTimestamp(record.value().metadata.tidspunkt.toEpochMilli()))
-        }.to(hendelseLoggTopic, Produced.with(Serdes.Long(), AvsluttetSerde()))
+        }.to(hendelseloggTopic, Produced.with(Serdes.Long(), AvsluttetSerde()))
     return build()
 }

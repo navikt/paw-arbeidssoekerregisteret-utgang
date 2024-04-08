@@ -63,7 +63,7 @@ fun testScope(): TestScope {
     val testDriver = TopologyTestDriver(
         streamBuilder.appTopology(
             stateStoreName = stateStoreName,
-            hendelseLoggTopic = hendelsesLogTopic,
+            hendelseloggTopic = hendelsesLogTopic,
             periodeTopic = periodeTopic,
             formidlingsgrupperTopic = formidlingsGruppeTopic(NaisEnv.Local),
             idAndRecordKeyFunction = idAndRecordKeyFunction,

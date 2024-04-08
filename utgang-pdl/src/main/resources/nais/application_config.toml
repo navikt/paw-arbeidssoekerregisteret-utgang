@@ -1,5 +1,4 @@
+applicationIdSuffix = "v1"
 periodeTopic = "paw.arbeidssokerperioder-v1"
 hendelseloggTopic = "paw.arbeidssoker-hendelseslogg-v1"
-applicationIdSuffix = "v1"
-aktivePerioderStateStoreName = "aktivePerioder"
-forhaandsgodkjenteHendelserStateStoreName = "forhaandsgodkjenteHendelser"
+hendelseStateStoreName = "hendelseState"

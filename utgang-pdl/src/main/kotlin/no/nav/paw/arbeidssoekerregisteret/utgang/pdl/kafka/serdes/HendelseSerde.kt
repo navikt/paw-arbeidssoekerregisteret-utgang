@@ -1,4 +1,4 @@
-package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.vo
+package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.serdes
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -28,8 +28,6 @@ class HendelseSerde : Serde<Hendelse> {
 }
 
 class HendelseSerializer(private val objectMapper: ObjectMapper): Serializer<Hendelse> {
-    constructor(): this(hendelseObjectMapper())
-
     override fun serialize(topic: String?, data: Hendelse?): ByteArray {
         return data?.let {
             objectMapper.writeValueAsBytes(it)
@@ -38,8 +36,6 @@ class HendelseSerializer(private val objectMapper: ObjectMapper): Serializer<Hen
 }
 
 class HendelseDeserializer(private val objectMapper: ObjectMapper): Deserializer<Hendelse> {
-    constructor(): this(hendelseObjectMapper())
-
     override fun deserialize(topic: String?, data: ByteArray?): Hendelse? {
         if (data == null) return null
         return deserialize(objectMapper, data)
