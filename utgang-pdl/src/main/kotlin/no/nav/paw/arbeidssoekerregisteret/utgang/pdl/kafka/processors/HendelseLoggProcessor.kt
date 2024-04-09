@@ -36,7 +36,7 @@ class HendelseLoggProcessor(
         val store = requireNotNull(hendelseStateStore) { "State store is not initialized" }
         val startetHendelse = record.value()
         val eksisterendeHendelseState = store.get(startetHendelse.hendelseId)
-            store.put(record.value().hendelseId, HendelseState(
+            store.put(startetHendelse.hendelseId, HendelseState(
                 brukerId = startetHendelse.id,
                 periodeId = startetHendelse.hendelseId,
                 recordKey = record.key(),

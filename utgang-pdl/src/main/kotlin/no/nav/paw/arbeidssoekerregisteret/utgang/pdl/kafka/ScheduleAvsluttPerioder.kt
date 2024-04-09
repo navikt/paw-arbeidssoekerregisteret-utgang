@@ -38,7 +38,7 @@ fun scheduleAvsluttPerioder(
         iterator
             .asSequence()
             .toList()
-            .filterNot { it.value.harTilhoerendePeriode && it.value.brukerId == null }
+            .filter { it.value.harTilhoerendePeriode && it.value.brukerId != null }
             .chunked(1000) { chunk ->
                 val identitetsnummere = chunk.map { it.value.identitetsnummer }
 
@@ -80,12 +80,8 @@ fun scheduleAvsluttPerioder(
                             return@forEachIndexed
                         }
 
-                        hendelseStateStore.delete(hendelseState.periodeId)
-
                         val aarsaker =
                             avsluttPeriodeGrunnlag.joinToString(separator = ", ")
-
-                        prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
 
                         val avsluttetHendelse =
                             Avsluttet(
@@ -103,12 +99,16 @@ fun scheduleAvsluttPerioder(
                                 )
                             )
 
+                        hendelseStateStore.delete(hendelseState.periodeId)
+                        prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
+
                         val record =
                             Record(
                                 hendelseState.recordKey,
                                 avsluttetHendelse,
                                 avsluttetHendelse.metadata.tidspunkt.toEpochMilli()
                             )
+
                         ctx.forward(record)
                     }
                 }
@@ -133,8 +133,8 @@ fun avsluttPeriodeGrunnlag(
             else -> null
         }
     }
-        .filterNot { it in opplysningerFraStartetHendelse && isForhaandsGodkjent }
-        .filter { it in negativeOpplysninger }
+        .filterNot { personStatus -> personStatus in opplysningerFraStartetHendelse && isForhaandsGodkjent }
+        .filter { opplysning -> opplysning in negativeOpplysninger }
         .toSet()
 }
 

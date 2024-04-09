@@ -12,9 +12,7 @@ import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.serdes.HendelseStateS
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Hendelse
 import no.nav.paw.config.hoplite.loadNaisOrLocalConfiguration
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Person
 import org.apache.avro.specific.SpecificRecord
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
@@ -91,20 +89,6 @@ fun testScope(pdlMockResponse: List<HentPersonBolkResult>): TestScope {
         topologyTestDriver = testDriver
     )
 }
-
-fun generatePdlMockResponse(ident: String, forenkletStatus: List<String>, status: String = "ok") = listOf(
-    HentPersonBolkResult(
-        ident,
-        person = Person(
-            forenkletStatus.map {
-                Folkeregisterpersonstatus(
-                    it,
-                )
-            },
-        ),
-        code = status,
-    )
-)
 
 const val SCHEMA_REGISTRY_SCOPE = "mock"
 

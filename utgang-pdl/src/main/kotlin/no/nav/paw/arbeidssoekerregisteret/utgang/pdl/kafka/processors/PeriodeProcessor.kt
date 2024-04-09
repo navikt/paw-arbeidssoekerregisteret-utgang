@@ -54,25 +54,26 @@ class PeriodeProcessor(
     override fun process(record: Record<Long, Periode>?) {
         if (record == null) return
         val hendelseStore = requireNotNull(hendelseStateStore) { "State store is not initialized" }
-        if (record.value().avsluttet != null) {
-            hendelseStore.delete(record.value().id)
+        val periode = record.value()
+        if (periode.avsluttet != null) {
+            hendelseStore.delete(periode.id)
             return
         }
-        val hendelseState = hendelseStore.get(record.value().id)
+        val hendelseState = hendelseStore.get(periode.id)
         if (hendelseState == null) {
             hendelseStore.put(
-                record.value().id, HendelseState(
+                periode.id, HendelseState(
                     brukerId = null,
-                    periodeId = record.value().id,
+                    periodeId = periode.id,
                     recordKey = record.key(),
-                    identitetsnummer = record.value().identitetsnummer,
+                    identitetsnummer = periode.identitetsnummer,
                     opplysninger = emptySet(),
                     harTilhoerendePeriode = true
                 )
             )
         } else {
             hendelseState.harTilhoerendePeriode = true
-            hendelseStore.put(record.value().id, hendelseState)
+            hendelseStore.put(periode.id, hendelseState)
         }
     }
 }

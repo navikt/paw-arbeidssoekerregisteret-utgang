@@ -11,6 +11,8 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Startet
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Opplysning
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Person
 import org.apache.kafka.streams.TestOutputTopic
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata as MetadataIntern
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker as BrukerIntern
@@ -150,7 +152,7 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "Sender ikke Avsluttet hendelse for person med forenkletStatus 'ikkeBosatt' i PDL og opplysning inneholder både FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT" {
+    "Sender ikke Avsluttet hendelse for person med forenkletStatus 'ikkeBosatt' i PDL og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
         with(testScope(generatePdlMockResponse("12345678904", listOf("ikkeBosatt", "dNummer")))) {
             verifyEmptyTopic(hendelseloggOutputTopic)
             hendelseloggInputTopic.pipeInput(
@@ -197,7 +199,7 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "Sender Avsluttet hendelse om forenkletStatus 'ikkeBosatt' i PDL og opplysning ikke inneholder både FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT" {
+    "Sender Avsluttet hendelse for person med forenkletStatus 'ikkeBosatt' i PDL og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
         with(testScope(generatePdlMockResponse("12345678904", listOf("ikkeBosatt", "dNummer")))) {
             verifyEmptyTopic(hendelseloggOutputTopic)
             hendelseloggInputTopic.pipeInput(
@@ -244,7 +246,7 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "Sender Avsluttet hendelse for person med forenkletStatus 'opphoert' i PDL og 'FORHAANDSGODKJENT_AV_ANSATT' og 'DNUMMER' i opplysninger" {
+    "Sender Avsluttet hendelse for person om forenkletStatus er 'opphoert' i PDL og opplysninger er 'FORHAANDSGODKJENT_AV_ANSATT' og 'DNUMMER'" {
         with(testScope(generatePdlMockResponse("12345678905", listOf("opphoert"), "ok"))) {
             verifyEmptyTopic(hendelseloggOutputTopic)
             hendelseloggInputTopic.pipeInput(
@@ -291,7 +293,7 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "avsluttPeriodeGrunnlag skal returnere en liste med grunnlag for avsluttet periode" {
+    "avsluttPeriodeGrunnlag skal returnere en liste med opplysning DOED om forenkletStatus er 'doedIFolkeregisteret'" {
         val folkeregisterpersonstatus =
             listOf(
                 Folkeregisterpersonstatus("doedIFolkeregisteret"),
@@ -300,6 +302,32 @@ class ApplicationTest : FreeSpec({
 
         val opplysningerFraHendelseState = emptySet<Opplysning>()
         avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe listOf(Opplysning.DOED)
+    }
+
+    "avsluttPeriodeGrunnlag skal returnere en tom liste med grunnlag for avsluttet periode om forenkletStatus er 'ikkeBosatt' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
+        val folkeregisterpersonstatus =
+            listOf(
+                Folkeregisterpersonstatus("ikkeBosatt"),
+            )
+
+        val opplysningerFraHendelseState = setOf(
+            Opplysning.FORHAANDSGODKJENT_AV_ANSATT,
+            Opplysning.IKKE_BOSATT
+        )
+        avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe emptySet()
+    }
+
+    "avsluttPeriodeGrunnlag skal retunere en liste med opplysning opphoert om forenkletStatus er 'opphoert' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og DNUMMER fra hendelser" {
+        val folkeregisterpersonstatus =
+            listOf(
+                Folkeregisterpersonstatus("opphoert"),
+            )
+
+        val opplysningerFraHendelseState = setOf(
+            Opplysning.DNUMMER,
+            Opplysning.FORHAANDSGODKJENT_AV_ANSATT
+        )
+        avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe listOf(Opplysning.OPPHOERT_IDENTITET)
     }
 })
 
@@ -313,3 +341,17 @@ fun verifyEmptyTopic(hendelseloggOutputTopic: TestOutputTopic<out Any, out Any>)
         }"
     )
 }
+
+fun generatePdlMockResponse(ident: String, forenkletStatus: List<String>, status: String = "ok") = listOf(
+    HentPersonBolkResult(
+        ident,
+        person = Person(
+            forenkletStatus.map {
+                Folkeregisterpersonstatus(
+                    it,
+                )
+            },
+        ),
+        code = status,
+    )
+)
