@@ -16,17 +16,23 @@ fun scheduleCleanup(
     stateStore: KeyValueStore<UUID, HendelseState>,
     interval: Duration = Duration.ofDays(30)
 ): Cancellable = ctx.schedule(interval, PunctuationType.WALL_CLOCK_TIME) { time ->
+
     val logger = LoggerFactory.getLogger("scheduleCleanup")
     try {
         val currentTime = Instant.ofEpochMilli(time)
 
-        stateStore.all().asSequence().filterNot { it.value.harTilhoerendePeriode }.forEach { keyValue ->
-            val value = keyValue.value
-            if (value.isOutdated(currentTime)) {
-                logger.debug("Sletter hendelse uten tilhørende periode med key: {} og hendelse id; {}", keyValue.key, value.periodeId)
+        stateStore.all().asSequence()
+            .filterNot { it.value.harTilhoerendePeriode }
+            .filter { it.value.isOutdated(currentTime) }
+            .forEach { keyValue ->
+                val value = keyValue.value
+                logger.debug(
+                    "Sletter hendelse uten tilhørende periode med key: {} og hendelse id; {}",
+                    keyValue.key,
+                    value.periodeId
+                )
                 stateStore.delete(keyValue.key)
             }
-        }
     } catch (e: Exception) {
         logger.error("Feil ved opprydding av hendelse state store: $e", e)
         throw e

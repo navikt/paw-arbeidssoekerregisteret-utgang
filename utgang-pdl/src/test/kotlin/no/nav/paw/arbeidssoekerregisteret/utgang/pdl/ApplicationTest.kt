@@ -66,8 +66,8 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "Sender Avsluttet hendelse for person med forenkletStatus 'bosattEtterFolkeregisterloven' og 'forsvunnet' i PDL og ingen opplysninger fra hendelser" {
-        with(testScope(generatePdlMockResponse("12345678902", listOf("bosattEtterFolkeregisterloven", "forsvunnet")))) {
+    "Sender ikke Avsluttet hendelse for person med forenkletStatus 'bosattEtterFolkeregisterloven' i PDL og ingen opplysninger fra hendelser" {
+        with(testScope(generatePdlMockResponse("12345678902", listOf("bosattEtterFolkeregisterloven")))) {
             verifyEmptyTopic(hendelseloggOutputTopic)
             hendelseloggInputTopic.pipeInput(
                 1234L,
@@ -105,8 +105,7 @@ class ApplicationTest : FreeSpec({
                 )
             )
             topologyTestDriver.advanceWallClockTime(Duration.ofDays(2))
-            hendelseloggOutputTopic.isEmpty shouldBe false
-            hendelseloggOutputTopic.readValue()
+            hendelseloggOutputTopic.isEmpty shouldBe true
         }
     }
 
@@ -199,8 +198,8 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "Sender Avsluttet hendelse for person med forenkletStatus 'ikkeBosatt' i PDL og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
-        with(testScope(generatePdlMockResponse("12345678904", listOf("ikkeBosatt", "dNummer")))) {
+    "Sender Avsluttet hendelse for person med forenkletStatus 'ikkeBosatt' i PDL og opplysninger FORHAANDSGODKJENT_AV_ANSATT og ER_UNDER_18_AAR fra hendelser" {
+        with(testScope(generatePdlMockResponse("12345678904", listOf("ikkeBosatt")))) {
             verifyEmptyTopic(hendelseloggOutputTopic)
             hendelseloggInputTopic.pipeInput(
                 1234L,

@@ -14,11 +14,14 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Opplysning
 import no.nav.paw.pdl.PdlException
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
+import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Person
 import org.apache.kafka.streams.processor.Cancellable
 import org.apache.kafka.streams.processor.PunctuationType
 import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -42,17 +45,7 @@ fun scheduleAvsluttPerioder(
             .chunked(1000) { chunk ->
                 val identitetsnummere = chunk.map { it.value.identitetsnummer }
 
-                val pdlForenkletStatus =
-                    try {
-                        pdlHentForenkletStatus.hentForenkletStatus(
-                            identitetsnummere,
-                            UUID.randomUUID().toString(),
-                            "paw-arbeidssoekerregisteret-utgang-pdl"
-                        )
-                    } catch (e: PdlException) {
-                        logger.error("PDL hentForenkletStatus feiler med: $e", e)
-                        return@chunked
-                    }
+                val pdlForenkletStatus = fetchPdlForenkletStatus(pdlHentForenkletStatus, identitetsnummere, logger)
 
                 if (pdlForenkletStatus == null) {
                     logger.error("PDL hentForenkletStatus returnerte null")
@@ -62,55 +55,32 @@ fun scheduleAvsluttPerioder(
                 pdlForenkletStatus.forEachIndexed { index, result ->
                     prometheusMeterRegistry.tellStatusFraPdlHentPersonBolk(result.code)
 
-                    if (result.code in setOf("bad_request", "not_found")) {
+                    val hendelseState = chunk[index].value
+
+                    val person = result.person
+                    if (
+                        result.code in pdlErrorResponses
+                        || person == null
+                        || person.erBosattEtterFolkeregisterloven
+                        || hendelseState == null
+                    ) {
                         return@forEachIndexed
                     }
 
-                    val person = result.person ?: return@forEachIndexed
+                    val avsluttetHendelse =
+                        getAvsluttetHendelseForPerson(person, hendelseState, prometheusMeterRegistry)
+                            ?: return@forEachIndexed
 
-                    if (person.folkeregisterpersonstatus.any { it.forenkletStatus !== "bosattEtterFolkeregisterloven" }) {
-                        val hendelseState = chunk[index].value
+                    hendelseStateStore.delete(hendelseState.periodeId)
 
-                        val opplysningerFraHendelseState = hendelseState?.opplysninger ?: emptySet()
+                    val record =
+                        Record(
+                            hendelseState.recordKey,
+                            avsluttetHendelse,
+                            avsluttetHendelse.metadata.tidspunkt.toEpochMilli()
+                        )
 
-                        val avsluttPeriodeGrunnlag =
-                            avsluttPeriodeGrunnlag(person.folkeregisterpersonstatus, opplysningerFraHendelseState)
-
-                        if (avsluttPeriodeGrunnlag.isEmpty()) {
-                            return@forEachIndexed
-                        }
-
-                        val aarsaker =
-                            avsluttPeriodeGrunnlag.joinToString(separator = ", ")
-
-                        val avsluttetHendelse =
-                            Avsluttet(
-                                hendelseId = hendelseState.periodeId,
-                                id = hendelseState.brukerId ?: throw IllegalStateException("BrukerId er null"),
-                                identitetsnummer = hendelseState.identitetsnummer,
-                                metadata = Metadata(
-                                    tidspunkt = Instant.now(),
-                                    aarsak = aarsaker,
-                                    kilde = "paw-arbeidssoekerregisteret-utgang-pdl",
-                                    utfoertAv = Bruker(
-                                        type = BrukerType.SYSTEM,
-                                        id = ApplicationInfo.id
-                                    )
-                                )
-                            )
-
-                        hendelseStateStore.delete(hendelseState.periodeId)
-                        prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
-
-                        val record =
-                            Record(
-                                hendelseState.recordKey,
-                                avsluttetHendelse,
-                                avsluttetHendelse.metadata.tidspunkt.toEpochMilli()
-                            )
-
-                        ctx.forward(record)
-                    }
+                    ctx.forward(record)
                 }
             }
     }
@@ -120,21 +90,12 @@ fun avsluttPeriodeGrunnlag(
     folkeregisterpersonstatus: List<Folkeregisterpersonstatus>,
     opplysningerFraStartetHendelse: Set<Opplysning>
 ): Set<Opplysning> {
-
     val isForhaandsGodkjent = Opplysning.FORHAANDSGODKJENT_AV_ANSATT in opplysningerFraStartetHendelse
 
-    return folkeregisterpersonstatus.mapNotNull { status ->
-        when (status.forenkletStatus) {
-            "ikkeBosatt" -> Opplysning.IKKE_BOSATT
-            "forsvunnet" -> Opplysning.SAVNET
-            "doedIFolkeregisteret" -> Opplysning.DOED
-            "opphoert" -> Opplysning.OPPHOERT_IDENTITET
-            "dNummer" -> Opplysning.DNUMMER
-            else -> null
-        }
-    }
-        .filterNot { personStatus -> personStatus in opplysningerFraStartetHendelse && isForhaandsGodkjent }
-        .filter { opplysning -> opplysning in negativeOpplysninger }
+    return folkeregisterpersonstatus.asSequence()
+        .mapNotNull { status -> statusToOpplysningMap[status.forenkletStatus] }
+        .filter { it in negativeOpplysninger }
+        .filterNot { it in opplysningerFraStartetHendelse && isForhaandsGodkjent }
         .toSet()
 }
 
@@ -144,3 +105,72 @@ val negativeOpplysninger = setOf(
     Opplysning.DOED,
     Opplysning.OPPHOERT_IDENTITET,
 )
+
+val statusToOpplysningMap = mapOf(
+    "ikkeBosatt" to Opplysning.IKKE_BOSATT,
+    "forsvunnet" to Opplysning.SAVNET,
+    "doedIFolkeregisteret" to Opplysning.DOED,
+    "opphoert" to Opplysning.OPPHOERT_IDENTITET,
+    "dNummer" to Opplysning.DNUMMER
+)
+
+private fun fetchPdlForenkletStatus(
+    pdlHentForenkletStatus: PdlHentForenkletStatus,
+    identitetsnummere: List<String>,
+    logger: Logger
+): List<HentPersonBolkResult>? {
+    return try {
+        pdlHentForenkletStatus.hentForenkletStatus(
+            identitetsnummere,
+            UUID.randomUUID().toString(),
+            "paw-arbeidssoekerregisteret-utgang-pdl"
+        ).also { if (it == null) logger.error("PDL hentForenkletStatus returnerte null") }
+    } catch (e: PdlException) {
+        logger.error("PDL hentForenkletStatus feiler med: $e", e)
+        null
+    }
+}
+
+private val Person.erBosattEtterFolkeregisterloven
+    get(): Boolean =
+        this.folkeregisterpersonstatus.any { it.forenkletStatus == "bosattEtterFolkeregisterloven" }
+
+private val pdlErrorResponses = setOf(
+    "bad_request",
+    "not_found"
+)
+
+private fun getAvsluttetHendelseForPerson(
+    person: Person,
+    hendelseState: HendelseState,
+    prometheusMeterRegistry: PrometheusMeterRegistry
+): Avsluttet? {
+    val opplysningerFraHendelseState = hendelseState.opplysninger
+
+    val avsluttPeriodeGrunnlag =
+        avsluttPeriodeGrunnlag(person.folkeregisterpersonstatus, opplysningerFraHendelseState)
+
+    if (avsluttPeriodeGrunnlag.isEmpty()) {
+        return null
+    }
+
+    val aarsaker =
+        avsluttPeriodeGrunnlag.joinToString(separator = ", ")
+
+    prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
+
+    return Avsluttet(
+        hendelseId = hendelseState.periodeId,
+        id = hendelseState.brukerId ?: throw IllegalStateException("BrukerId er null"),
+        identitetsnummer = hendelseState.identitetsnummer,
+        metadata = Metadata(
+            tidspunkt = Instant.now(),
+            aarsak = aarsaker,
+            kilde = "paw-arbeidssoekerregisteret-utgang-pdl",
+            utfoertAv = Bruker(
+                type = BrukerType.SYSTEM,
+                id = ApplicationInfo.id
+            )
+        )
+    )
+}
