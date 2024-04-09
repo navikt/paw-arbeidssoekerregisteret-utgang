@@ -9,6 +9,7 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Opplysning
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serializer
+import java.time.Instant
 import java.util.*
 
 data class HendelseState(
@@ -17,6 +18,7 @@ data class HendelseState(
     val recordKey: Long,
     val identitetsnummer: String,
     val opplysninger: Set<Opplysning>,
+    val startetTidspunkt: Instant,
     var harTilhoerendePeriode: Boolean = false
 )
 

@@ -42,7 +42,7 @@ fun testScope(pdlMockResponse: List<HentPersonBolkResult>): TestScope {
 
     val periodeSerde = createAvroSerde<Periode>()
 
-    val hendelseStateStoreName = "hendelseStateStore"
+    val hendelseStateStoreName = applicationConfig.hendelseStateStoreName
 
     val streamBuilder = StreamsBuilder()
         .addStateStore(

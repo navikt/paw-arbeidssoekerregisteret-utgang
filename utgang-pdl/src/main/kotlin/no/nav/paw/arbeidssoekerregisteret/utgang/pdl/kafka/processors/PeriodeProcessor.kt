@@ -68,6 +68,7 @@ class PeriodeProcessor(
                     recordKey = record.key(),
                     identitetsnummer = periode.identitetsnummer,
                     opplysninger = emptySet(),
+                    startetTidspunkt = periode.startet.tidspunkt,
                     harTilhoerendePeriode = true
                 )
             )

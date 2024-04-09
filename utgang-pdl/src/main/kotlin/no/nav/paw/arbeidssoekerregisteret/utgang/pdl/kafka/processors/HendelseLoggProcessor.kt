@@ -1,5 +1,6 @@
 package no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.processors
 
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.scheduleCleanup
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.serdes.HendelseState
 import no.nav.paw.arbeidssokerregisteret.intern.v1.Startet
 import org.apache.kafka.streams.kstream.KStream
@@ -29,6 +30,10 @@ class HendelseLoggProcessor(
         super.init(context)
         this.context = context
         hendelseStateStore = context?.getStateStore(hendelseStateStoreName)
+        scheduleCleanup(
+            requireNotNull(context) { "Context is not initialized" },
+            requireNotNull(hendelseStateStore) { "State store is not initialized" }
+        )
     }
 
     override fun process(record: Record<Long, Startet>?) {
@@ -42,6 +47,7 @@ class HendelseLoggProcessor(
                 recordKey = record.key(),
                 identitetsnummer = startetHendelse.identitetsnummer,
                 opplysninger = startetHendelse.opplysninger,
+                startetTidspunkt = eksisterendeHendelseState?.startetTidspunkt ?: startetHendelse.metadata.tidspunkt,
                 harTilhoerendePeriode = eksisterendeHendelseState?.harTilhoerendePeriode ?: false
             ))
         }

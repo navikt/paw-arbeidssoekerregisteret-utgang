@@ -293,6 +293,108 @@ class ApplicationTest : FreeSpec({
         }
     }
 
+    "Fjerner hendelse fra hendelse state store hvis ingen tilhørende periode har kommet innen 30 dager" {
+        with(testScope(generatePdlMockResponse("12345678906", listOf("opphoert"), "ok"))) {
+            verifyEmptyTopic(hendelseloggOutputTopic)
+            hendelseloggInputTopic.pipeInput(
+                1234L,
+                Startet(
+                    periodeId,
+                    1234L,
+                    "12345678906",
+                    MetadataIntern(
+                        Instant.now(),
+                        BrukerIntern(
+                            BrukerTypeIntern.SLUTTBRUKER,
+                            "12345678906"
+                        ),
+                        "",
+                        ""
+                    ),
+                    setOf(
+                        Opplysning.DNUMMER,
+                        Opplysning.FORHAANDSGODKJENT_AV_ANSATT
+                    )
+                )
+            )
+            topologyTestDriver.advanceWallClockTime(Duration.ofDays(31))
+            hendelseKeyValueStore.get(periodeId) shouldBe null
+        }
+    }
+
+    "Fjerner ikke hendelse fra hendelse state store hvis ingen tilhørende periode har kommet innen 29 dager" {
+        with(testScope(generatePdlMockResponse("12345678906", listOf("opphoert"), "ok"))) {
+            verifyEmptyTopic(hendelseloggOutputTopic)
+            hendelseloggInputTopic.pipeInput(
+                1234L,
+                Startet(
+                    periodeId,
+                    1234L,
+                    "12345678906",
+                    MetadataIntern(
+                        Instant.now(),
+                        BrukerIntern(
+                            BrukerTypeIntern.SLUTTBRUKER,
+                            "12345678906"
+                        ),
+                        "",
+                        ""
+                    ),
+                    setOf(
+                        Opplysning.DNUMMER,
+                        Opplysning.FORHAANDSGODKJENT_AV_ANSATT
+                    )
+                )
+            )
+            topologyTestDriver.advanceWallClockTime(Duration.ofDays(29))
+            hendelseKeyValueStore.all().asSequence().count() shouldBe 1
+        }
+    }
+
+    "Fjerner ikke hendelse fra hendelse state store hvis tilhørende periode har kommet innen 30 dager" {
+        with(testScope(generatePdlMockResponse("12345678906", listOf("bosattEtterFolkeregisterloven"), "ok"))) {
+            verifyEmptyTopic(hendelseloggOutputTopic)
+            hendelseloggInputTopic.pipeInput(
+                1234L,
+                Startet(
+                    periodeId,
+                    1234L,
+                    "12345678906",
+                    MetadataIntern(
+                        Instant.now(),
+                        BrukerIntern(
+                            BrukerTypeIntern.SLUTTBRUKER,
+                            "12345678906"
+                        ),
+                        "",
+                        ""
+                    ),
+                    emptySet()
+                )
+            )
+            topologyTestDriver.advanceWallClockTime(Duration.ofDays(10))
+            periodeTopic.pipeInput(
+                1234L,
+                Periode(
+                    periodeId,
+                    "12345678906",
+                    Metadata(
+                        Instant.now(),
+                        Bruker(
+                            BrukerType.SLUTTBRUKER,
+                            "12345678906"
+                        ),
+                        "",
+                        ""
+                    ),
+                    null
+                )
+            )
+            topologyTestDriver.advanceWallClockTime(Duration.ofDays(21))
+            hendelseKeyValueStore.all().asSequence().count() shouldBe 1
+        }
+    }
+
     "avsluttPeriodeGrunnlag skal returnere en liste med opplysning DOED om forenkletStatus er 'doedIFolkeregisteret'" {
         val folkeregisterpersonstatus =
             listOf(
