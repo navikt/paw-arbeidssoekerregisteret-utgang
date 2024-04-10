@@ -40,21 +40,29 @@ fun StreamsBuilder.appTopology(
                     }
                 }
         }
-        .filter { _, (_, formidlingsgruppe, _) ->
-            formidlingsgruppe.kode.equals("ISERV", ignoreCase = true).also { isServ ->
-                if (!isServ) {
-                    prometheusRegistry.tellIgnorertGrunnetFormidlingsgruppe(formidlingsgruppe)
+        .filter { _, data ->
+            (data.opType == OpType.UPDATE)
+                .also { isUpdate ->
+                    if (!isUpdate) {
+                        prometheusRegistry.tellIgnorertGrunnetOpType(data.opType, data.formidlingsgruppe)
+                    }
                 }
+        }
+        .filter { _, data ->
+            data.formidlingsgruppe.kode.equals("ISERV", ignoreCase = true).also { isServ ->
+            if (!isServ) {
+                prometheusRegistry.tellIgnorertGrunnetFormidlingsgruppe(data.formidlingsgruppe)
             }
         }
-        .mapNonNull("getKeyOrNull") { value ->
-            idAndRecordKeyFunction(value.first.foedselsnummer)
-                ?.let { idAndKey -> idAndKey to value }
-                .also { if (it == null) prometheusRegistry.tellIkkeIPDL()}
+        }
+        .mapNonNull("getKeyOrNull") { data ->
+            idAndRecordKeyFunction(data.foedselsnummer.foedselsnummer)
+                ?.let { idAndKey -> idAndKey to data }
+                .also { if (it == null) prometheusRegistry.tellIkkeIPDL() }
         }
         .map { _, (idAndKey, value) ->
             val (id, newKey) = idAndKey
-            val (foedselsnummer, formidlingsgruppe, tidspunkt) = value
+            val (_, foedselsnummer, formidlingsgruppe, tidspunkt) = value
             KeyValue(
                 newKey, GyldigHendelse(
                     id = id,

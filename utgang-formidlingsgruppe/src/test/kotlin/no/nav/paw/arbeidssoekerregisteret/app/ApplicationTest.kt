@@ -88,13 +88,36 @@ class ApplicationTest : FreeSpec({
                 )
                 hendelseloggTopic.isEmpty shouldBe true
             }
-            "Når vi mottar ISERV datert etter periode start genereres en 'stoppet' melding" {
+            "Når vi mottar ISERV datert etter periode start, med 'op_type = I' skjer det ingenting" {
+                formidlingsgruppeTopic.pipeInput(
+                    formilingsgruppeHendelse(
+                        foedselsnummer = periodeStart.identitetsnummer,
+                        formidlingsgruppe = iserv,
+                        formidlingsgruppeEndret = localNow.plus(1.dager),
+                        opType = "I"
+                    )
+                )
+                hendelseloggTopic.isEmpty shouldBe true
+            }
+            "Når vi mottar ISERV datert etter periode start, med 'op_type = D' skjer det ingenting" {
+                formidlingsgruppeTopic.pipeInput(
+                    formilingsgruppeHendelse(
+                        foedselsnummer = periodeStart.identitetsnummer,
+                        formidlingsgruppe = iserv,
+                        formidlingsgruppeEndret = localNow.plus(1.dager),
+                        opType = "D"
+                    )
+                )
+                hendelseloggTopic.isEmpty shouldBe true
+            }
+            "Når vi mottar ISERV datert etter periode start, med 'op_type = U' genereres en 'stoppet' melding" {
                 formidlingsgruppeTopic.pipeInput(
                     "Some random key",
                     formilingsgruppeHendelse(
                         foedselsnummer = periodeStart.identitetsnummer,
                         formidlingsgruppe = iserv,
-                        formidlingsgruppeEndret = localNow.plus(1.dager)
+                        formidlingsgruppeEndret = localNow.plus(1.dager),
+                        opType = "U"
                     )
                 )
                 hendelseloggTopic.isEmpty shouldBe false
@@ -129,10 +152,11 @@ class ApplicationTest : FreeSpec({
 fun formilingsgruppeHendelse(
     foedselsnummer: String,
     formidlingsgruppe: Formidlingsgruppe,
-    formidlingsgruppeEndret: LocalDateTime = LocalDateTime.now()
+    formidlingsgruppeEndret: LocalDateTime = LocalDateTime.now(),
+    opType: String = "U"
 ): ArenaFormidlingsruppe =
     ArenaFormidlingsruppe(
-        op_type = "insert",
+        op_type = opType,
         after = ArenaData(
             personId = "vi leser ikke denne",
             personIdStatus = "vi leser ikke denne heller",

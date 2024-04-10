@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Tag
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.nav.paw.arbeidssoekerregisteret.app.functions.FilterResultat
 import no.nav.paw.arbeidssoekerregisteret.app.vo.Formidlingsgruppe
+import no.nav.paw.arbeidssoekerregisteret.app.vo.OpType
 
 fun PrometheusMeterRegistry.tellFilterResultat(result: FilterResultat) {
     counter(
@@ -30,5 +31,15 @@ fun PrometheusMeterRegistry.tellIgnorertGrunnetFormidlingsgruppe(formidlingsgrup
     counter(
         "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
         listOf(Tag.of("resultat", formidlingsgruppe.kode))
+    ).increment()
+}
+
+fun PrometheusMeterRegistry.tellIgnorertGrunnetOpType(
+    opType: OpType,
+    formidlingsgruppe: Formidlingsgruppe
+) {
+    counter(
+        "paw_arbeidssoekerregisteret_formidlingsgrupper_filter",
+        listOf(Tag.of("resultat", "${opType}_${formidlingsgruppe.kode}"))
     ).increment()
 }

@@ -22,14 +22,42 @@ data class ArenaData(
     val formidlingsgruppekode: String,
     val modDato: String
 )
+
 private val datoFormatLogger = LoggerFactory.getLogger("Datoformat")
 private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-fun ArenaFormidlingsruppe.validValuesOrNull(): Triple<Foedselsnummer, Formidlingsgruppe, Instant>? {
+
+fun ArenaFormidlingsruppe.validValuesOrNull(): FormidlingsgruppeData? {
     val foedselsnummer = after?.fodselsnr?.let(::Foedselsnummer) ?: return null
     val formidlingsgruppe = Formidlingsgruppe(after.formidlingsgruppekode)
     val formidlingsgruppeEndret = LocalDateTime.parse(after.modDato, formatter)
         .atZone(ZoneId.of("Europe/Oslo")).toInstant()
 
     datoFormatLogger.info("endret dato: ${after.modDato}, parsed=$formidlingsgruppeEndret")
-    return Triple(foedselsnummer, formidlingsgruppe, formidlingsgruppeEndret)
+    return FormidlingsgruppeData(
+        opType = OpType.ofShortValue(op_type),
+        foedselsnummer = foedselsnummer,
+        formidlingsgruppe = formidlingsgruppe,
+        formidlingsgruppeEndret = formidlingsgruppeEndret
+    )
+}
+
+data class FormidlingsgruppeData(
+    val opType: OpType,
+    val foedselsnummer: Foedselsnummer,
+    val formidlingsgruppe: Formidlingsgruppe,
+    val formidlingsgruppeEndret: Instant
+)
+
+enum class OpType {
+    INSERT,
+    UPDATE,
+    DELETE;
+    companion object {
+        fun ofShortValue(value: String) = when (value.uppercase()) {
+            "I" -> INSERT
+            "U" -> UPDATE
+            "D" -> DELETE
+            else -> throw IllegalArgumentException("Ukjent op_type-verdi på Kafka: $value")
+        }
+    }
 }
