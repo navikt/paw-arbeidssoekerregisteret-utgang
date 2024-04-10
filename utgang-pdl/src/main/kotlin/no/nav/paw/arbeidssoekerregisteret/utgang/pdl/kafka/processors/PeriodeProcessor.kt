@@ -45,7 +45,7 @@ class PeriodeProcessor(
         scheduleAvsluttPerioder(
             requireNotNull(context),
             requireNotNull(hendelseStateStore),
-            Duration.ofDays(1),
+            Duration.ofMinutes(3), // TODO: skal være 1 dag, endrer for å teste i DEV
             pdlHentForenkletStatus,
             prometheusMeterRegistry
         )
