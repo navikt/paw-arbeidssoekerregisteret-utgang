@@ -3,6 +3,7 @@ package no.nav.paw.arbeidssoekerregisteret.utgang.pdl
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.avsluttPeriodeGrunnlag
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
@@ -105,7 +106,7 @@ class ApplicationTest : FreeSpec({
                 )
             )
             topologyTestDriver.advanceWallClockTime(Duration.ofDays(2))
-            hendelseloggOutputTopic.isEmpty shouldBe true
+            verifyEmptyTopic(hendelseloggOutputTopic)
         }
     }
 
@@ -346,7 +347,7 @@ class ApplicationTest : FreeSpec({
                 )
             )
             topologyTestDriver.advanceWallClockTime(Duration.ofDays(29))
-            hendelseKeyValueStore.all().asSequence().count() shouldBe 1
+            hendelseKeyValueStore.get(periodeId) shouldNotBe null
         }
     }
 
@@ -390,7 +391,7 @@ class ApplicationTest : FreeSpec({
                 )
             )
             topologyTestDriver.advanceWallClockTime(Duration.ofDays(21))
-            hendelseKeyValueStore.all().asSequence().count() shouldBe 1
+            hendelseKeyValueStore.get(periodeId) shouldNotBe null
         }
     }
 
