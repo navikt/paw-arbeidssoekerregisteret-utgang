@@ -9,18 +9,28 @@ import no.nav.paw.kafkakeygenerator.auth.AzureM2MConfig
 import no.nav.paw.kafkakeygenerator.auth.azureAdM2MTokenClient
 import no.nav.paw.kafkakeygenerator.auth.currentNaisEnv
 import no.nav.paw.pdl.PdlClient
+import no.nav.paw.pdl.PdlException
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
 import no.nav.paw.pdl.hentForenkletStatusBolk
+import org.slf4j.LoggerFactory
 
 fun interface PdlHentForenkletStatus {
     fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String): List<HentPersonBolkResult>?
 
     companion object {
+        val logger = LoggerFactory.getLogger("pdlClient")
+
         fun create(): PdlHentForenkletStatus {
             val pdlClient = createPdlClient()
             return PdlHentForenkletStatus { ident, callId, navConsumerId ->
                 runBlocking {
-                    pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId)
+                    try {
+                        pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId)
+                    } catch (e: PdlException) {
+                        logger.error("PDL hentForenkletStatus feiler med: $e", e)
+                        null
+                    }
+
                 }
             }
         }

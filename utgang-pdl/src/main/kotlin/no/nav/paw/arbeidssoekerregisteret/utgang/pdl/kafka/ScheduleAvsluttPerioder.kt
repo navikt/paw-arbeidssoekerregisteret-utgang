@@ -12,16 +12,13 @@ import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Bruker
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.BrukerType
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Metadata
 import no.nav.paw.arbeidssokerregisteret.intern.v1.vo.Opplysning
-import no.nav.paw.pdl.PdlException
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Folkeregisterpersonstatus
-import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkResult
 import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.Person
 import org.apache.kafka.streams.processor.Cancellable
 import org.apache.kafka.streams.processor.PunctuationType
 import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -45,7 +42,11 @@ fun scheduleAvsluttPerioder(
             .chunked(1000) { chunk ->
                 val identitetsnummere = chunk.map { it.value.identitetsnummer }
 
-                val pdlForenkletStatus = fetchPdlForenkletStatus(pdlHentForenkletStatus, identitetsnummere, logger)
+                val pdlForenkletStatus = pdlHentForenkletStatus.hentForenkletStatus(
+                    identitetsnummere,
+                    UUID.randomUUID().toString(),
+                    "paw-arbeidssoekerregisteret-utgang-pdl"
+                )
 
                 if (pdlForenkletStatus == null) {
                     logger.error("PDL hentForenkletStatus returnerte null")
@@ -114,23 +115,6 @@ val statusToOpplysningMap = mapOf(
     "dNummer" to Opplysning.DNUMMER
 )
 
-private fun fetchPdlForenkletStatus(
-    pdlHentForenkletStatus: PdlHentForenkletStatus,
-    identitetsnummere: List<String>,
-    logger: Logger
-): List<HentPersonBolkResult>? {
-    return try {
-        pdlHentForenkletStatus.hentForenkletStatus(
-            identitetsnummere,
-            UUID.randomUUID().toString(),
-            "paw-arbeidssoekerregisteret-utgang-pdl"
-        ).also { if (it == null) logger.error("PDL hentForenkletStatus returnerte null") }
-    } catch (e: PdlException) {
-        logger.error("PDL hentForenkletStatus feiler med: $e", e)
-        null
-    }
-}
-
 private val Person.erBosattEtterFolkeregisterloven
     get(): Boolean =
         this.folkeregisterpersonstatus.any { it.forenkletStatus == "bosattEtterFolkeregisterloven" }
@@ -154,8 +138,7 @@ private fun getAvsluttetHendelseForPerson(
         return null
     }
 
-    val aarsaker =
-        avsluttPeriodeGrunnlag.joinToString(separator = ", ")
+    val aarsaker = avsluttPeriodeGrunnlag.joinToString(separator = ", ")
 
     prometheusMeterRegistry.tellPdlAvsluttetHendelser(aarsaker)
 
