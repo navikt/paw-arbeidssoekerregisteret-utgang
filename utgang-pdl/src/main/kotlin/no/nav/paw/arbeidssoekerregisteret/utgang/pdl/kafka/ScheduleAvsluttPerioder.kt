@@ -53,10 +53,13 @@ fun scheduleAvsluttPerioder(
                     return@chunked
                 }
 
+
                 pdlForenkletStatus.forEachIndexed { index, result ->
                     prometheusMeterRegistry.tellStatusFraPdlHentPersonBolk(result.code)
 
                     val hendelseState = chunk[index].value
+
+                    logger.info("Vurderer hendelseState: $hendelseState mot resultat: ${result.person}")
 
                     val person = result.person
                     if (
@@ -67,6 +70,8 @@ fun scheduleAvsluttPerioder(
                     ) {
                         return@forEachIndexed
                     }
+
+                    logger.info("Avslutter periode basert på hendelseState $hendelseState og person $person")
 
                     val avsluttetHendelse =
                         getAvsluttetHendelseForPerson(person, hendelseState, prometheusMeterRegistry)
