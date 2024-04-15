@@ -71,7 +71,7 @@ fun scheduleAvsluttPerioder(
                         return@forEachIndexed
                     }
 
-                    logger.info("Avslutter periode basert på hendelseState $hendelseState og person $person")
+                    logger.info("Avslutter periode basert på hendelseState: $hendelseState og folkeregisterpersonstatus: ${person.folkeregisterpersonstatus}")
 
                     val avsluttetHendelse =
                         getAvsluttetHendelseForPerson(person, hendelseState, prometheusMeterRegistry)

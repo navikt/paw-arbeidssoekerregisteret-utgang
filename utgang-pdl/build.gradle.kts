@@ -60,7 +60,13 @@ application {
 
 jib {
     from.image = "ghcr.io/navikt/baseimages/temurin:${jvmVersion.majorVersion}"
-    to.image = "${image ?: rootProject.name}:${project.version}"
+    val actualImage = "${image ?: rootProject.name}:${project.version}"
+    to.image = actualImage
+    container {
+        environment = mapOf(
+            "IMAGE_WITH_VERSION" to actualImage
+        )
+    }
 }
 
 tasks.named<Test>("test") {
