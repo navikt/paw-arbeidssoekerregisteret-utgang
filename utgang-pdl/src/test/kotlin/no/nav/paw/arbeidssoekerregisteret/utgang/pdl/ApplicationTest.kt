@@ -4,7 +4,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.avsluttPeriodeGrunnlag
+import no.nav.paw.arbeidssoekerregisteret.utgang.pdl.kafka.filterAvsluttPeriodeGrunnlag
 import no.nav.paw.arbeidssokerregisteret.api.v1.Bruker
 import no.nav.paw.arbeidssokerregisteret.api.v1.BrukerType
 import no.nav.paw.arbeidssokerregisteret.api.v1.Metadata
@@ -395,7 +395,7 @@ class ApplicationTest : FreeSpec({
         }
     }
 
-    "avsluttPeriodeGrunnlag skal returnere en liste med opplysning DOED om forenkletStatus er 'doedIFolkeregisteret'" {
+    "filterAvsluttPeriodeGrunnlag() skal returnere en liste med opplysning DOED om forenkletStatus er 'doedIFolkeregisteret'" {
         val folkeregisterpersonstatus =
             listOf(
                 Folkeregisterpersonstatus("doedIFolkeregisteret"),
@@ -403,10 +403,10 @@ class ApplicationTest : FreeSpec({
             )
 
         val opplysningerFraHendelseState = emptySet<Opplysning>()
-        avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe listOf(Opplysning.DOED)
+        folkeregisterpersonstatus.filterAvsluttPeriodeGrunnlag(opplysningerFraHendelseState) shouldBe listOf(Opplysning.DOED)
     }
 
-    "avsluttPeriodeGrunnlag skal returnere en tom liste med grunnlag for avsluttet periode om forenkletStatus er 'ikkeBosatt' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
+    "filterAvsluttPeriodeGrunnlag() skal returnere en tom liste med grunnlag for avsluttet periode om forenkletStatus er 'ikkeBosatt' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og IKKE_BOSATT fra hendelser" {
         val folkeregisterpersonstatus =
             listOf(
                 Folkeregisterpersonstatus("ikkeBosatt"),
@@ -416,10 +416,10 @@ class ApplicationTest : FreeSpec({
             Opplysning.FORHAANDSGODKJENT_AV_ANSATT,
             Opplysning.IKKE_BOSATT
         )
-        avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe emptySet()
+        folkeregisterpersonstatus.filterAvsluttPeriodeGrunnlag(opplysningerFraHendelseState) shouldBe emptySet()
     }
 
-    "avsluttPeriodeGrunnlag skal retunere en liste med opplysning opphoert om forenkletStatus er 'opphoert' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og DNUMMER fra hendelser" {
+    "filterAvsluttPeriodeGrunnlag() skal retunere en liste med opplysning opphoert om forenkletStatus er 'opphoert' og opplysninger FORHAANDSGODKJENT_AV_ANSATT og DNUMMER fra hendelser" {
         val folkeregisterpersonstatus =
             listOf(
                 Folkeregisterpersonstatus("opphoert"),
@@ -429,7 +429,7 @@ class ApplicationTest : FreeSpec({
             Opplysning.DNUMMER,
             Opplysning.FORHAANDSGODKJENT_AV_ANSATT
         )
-        avsluttPeriodeGrunnlag(folkeregisterpersonstatus, opplysningerFraHendelseState) shouldBe listOf(Opplysning.OPPHOERT_IDENTITET)
+        folkeregisterpersonstatus.filterAvsluttPeriodeGrunnlag(opplysningerFraHendelseState) shouldBe listOf(Opplysning.OPPHOERT_IDENTITET)
     }
 })
 
