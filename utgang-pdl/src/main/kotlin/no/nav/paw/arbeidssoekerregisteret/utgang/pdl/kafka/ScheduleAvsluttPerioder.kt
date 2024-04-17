@@ -141,7 +141,15 @@ fun List<Folkeregisterpersonstatus>.filterAvsluttPeriodeGrunnlag(
 }
 
 private fun Set<Opplysning>.toAarsak(): String =
-    this.joinToString(separator = ", ") { it.name.lowercase(Locale.getDefault()) }
+    this.joinToString(separator = ", ") {
+        when (it) {
+            Opplysning.DOED -> "Personen er doed"
+            Opplysning.SAVNET -> "Personen er savnet"
+            Opplysning.IKKE_BOSATT -> "Personen er ikke bosatt etter folkeregisterloven"
+            Opplysning.OPPHOERT_IDENTITET -> "Personen har opphoert identitet"
+            else -> it.name
+        }
+    }
 
 private val negativeOpplysninger = setOf(
     Opplysning.IKKE_BOSATT,
