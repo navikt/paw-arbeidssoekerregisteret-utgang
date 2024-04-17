@@ -3,23 +3,23 @@
 
 ## Hvordan fungerer det
 
-Denne applikasjonen lytter på hendelser fra Kafka, og henter data fra PDL for å sjekke om en arbeidssøker har avsluttet sin periode. 
+Denne applikasjonen lytter på hendelser fra Kafka, og henter folkeregisterpersonstatus fra PDL for å sjekke om det finnes grunnlag for å avslutte perioder. 
 
-Dersom en arbeidssøker har avsluttet sin periode, sendes en hendelse til hendelselogg.
+Dersom det finnes grunnlag for å avslutte en arbeidssøkers periode, sendes en avsluttet hendelse med årsak til hendelselogg.
 
 Den lytter på følgende topics:
 - paw.arbeidssoekerperioder-v1 (for å hente aktive arbeidssøkerperioder)
-- paw.arbeidssoker-hendelseslogg-v1 (for å hente informasjon om forhåndsgodkjente arbeidssøkerperioder)
+- paw.arbeidssoker-hendelseslogg-v1 (for å hente forhåndsgodkjente arbeidssøkerperioder)
 
-Og sender avsluttet hendelse til:
+Og sender eventuelt avsluttet hendelse til:
 - paw.arbeidssoker-hendelseslogg-v1
 
 ```mermaid
 sequenceDiagram
-    Kafka->>StateStore: Aktive arbeidssøkerperioder lagres
-    Kafka->>StateStore: Lagrer opplysninger som er forhåndsgodkjent av ansatt
-    StateStore->>Planlagt oppgave: Henter aktive perioder og evt. forhåndsgodkjenning
+    Kafka->>StateStore: Lagrer informasjon fra startet hendelser i HendelseState
+    Kafka->>StateStore: HendelseState oppdateres for aktive arbeidssøkerperioder
+    StateStore->>Planlagt oppgave: Itererer gjennom aktive perioder i hendelseState en gang i døgnet
     Planlagt oppgave->>PDL: Bolk henting av "forenkletStatus" i PDL 
-    PDL->>Avsluttet hendelse: Hvis forenkletStatus ikke har bosattEtterFolkeregisterloven og har<br>[ikkeBosatt, forsvunnet, doedIFolkeregisteret, opphoert, dNummer]<br>Hvis forhåndsgodkjent sjekk at ikke avslagsgrunn fra PDL er samme som fra hendelselogg
+    PDL->>Avsluttet hendelse: Hvis forenkletStatus ikke har bosattEtterFolkeregisterloven og har en eller flere av <br>[ikkeBosatt, forsvunnet, doedIFolkeregisteret, opphoert]<br> Hvis opplysninger fra hendelse inneholder 'FORHAANDSGODKJENT_AV_ANSATT' og opplysninger tilsvarende forenkletStatus sendes ikke en avsluttet hendelse.
     Avsluttet hendelse->>Hendelselogg: Send avsluttethendelse til hendelselogg
 ```
