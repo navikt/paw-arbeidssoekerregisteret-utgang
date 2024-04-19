@@ -79,6 +79,7 @@ private fun List<HentPersonBolkResult>.processResults(
         ?: return@forEachIndexed
 
     if (folkeregisterpersonstatus.erBosattEtterFolkeregisterloven) {
+        oppdaterHendelseStateOpplysninger(hendelseState, hendelseStateStore)
         return@forEachIndexed
     }
 
@@ -111,6 +112,20 @@ private fun hentPersonStatusOgHendelseState(
     return Pair(person.folkeregisterpersonstatus, hendelseState)
 }
 
+private fun oppdaterHendelseStateOpplysninger(
+    hendelseState: HendelseState,
+    hendelseStateStore: KeyValueStore<UUID, HendelseState>
+) {
+    if (Opplysning.FORHAANDSGODKJENT_AV_ANSATT in hendelseState.opplysninger && hendelseState.opplysninger.any { it in negativeOpplysninger }) {
+        val oppdatertHendelseState = hendelseState.copy(
+            opplysninger = hendelseState.opplysninger
+                .filterNot { it == Opplysning.FORHAANDSGODKJENT_AV_ANSATT || it in negativeOpplysninger }
+                .toSet()
+        )
+        hendelseStateStore.put(hendelseState.periodeId, oppdatertHendelseState)
+    }
+}
+
 private fun hentForenkletStatus(
     identitetsnummere: List<String>,
     pdlHentForenkletStatus: PdlHentForenkletStatus,
@@ -136,7 +151,8 @@ fun List<Folkeregisterpersonstatus>.filterAvsluttPeriodeGrunnlag(
     return this.asSequence()
         .mapNotNull { status -> statusToOpplysningMap[status.forenkletStatus] }
         .filter { it in negativeOpplysninger }
-        .filterNot { it in opplysningerFraStartetHendelse && isForhaandsGodkjent } // ForhaandsGodkjent av ansatt skal overstyre gjeldende status
+        // Opplysning FORHAANDSGODKJENT_AV_ANSATT + DOED/SAVNET/IKKE_BOSATT/OPPHOERT_IDENTITET skal overstyre tilsvarende forenkletStatus fra PDL
+        .filterNot { it in opplysningerFraStartetHendelse && isForhaandsGodkjent }
         .toSet()
 }
 

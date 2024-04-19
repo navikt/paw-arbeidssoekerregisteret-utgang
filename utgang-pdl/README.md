@@ -9,9 +9,9 @@ Dersom det finnes grunnlag for å avslutte en arbeidssøkers periode, sendes en 
 
 Den lytter på følgende topics:
 - paw.arbeidssoekerperioder-v1 (for å hente aktive arbeidssøkerperioder)
-- paw.arbeidssoker-hendelseslogg-v1 (for å hente forhåndsgodkjente arbeidssøkerperioder)
+- paw.arbeidssoker-hendelseslogg-v1 (for å hente hendelse informasjon fra startet hendelser)
 
-Og sender eventuelt avsluttet hendelse til:
+Og sender avsluttet hendelse til:
 - paw.arbeidssoker-hendelseslogg-v1
 
 ```mermaid
