@@ -1,6 +1,5 @@
 # paw-arbeidssoekerregisteret-pdl-utgang
 
-
 ## Hvordan fungerer det
 
 Denne applikasjonen lytter på hendelser fra Kafka, og henter folkeregisterpersonstatus fra PDL for å sjekke om det finnes grunnlag for å avslutte perioder. 
