@@ -14,18 +14,20 @@ import no.nav.paw.pdl.graphql.generated.hentforenkletstatusbolk.HentPersonBolkRe
 import no.nav.paw.pdl.hentForenkletStatusBolk
 import org.slf4j.LoggerFactory
 
+const val BEHANDLINGSNUMMER = "B452"
+
 fun interface PdlHentForenkletStatus {
-    fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String): List<HentPersonBolkResult>?
+    fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String, behandlingsnummer: String): List<HentPersonBolkResult>?
 
     companion object {
         val logger = LoggerFactory.getLogger("pdlClient")
 
         fun create(): PdlHentForenkletStatus {
             val pdlClient = createPdlClient()
-            return PdlHentForenkletStatus { ident, callId, navConsumerId ->
+            return PdlHentForenkletStatus { ident, callId, navConsumerId, _ ->
                 runBlocking {
                     try {
-                        pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId)
+                        pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId, behandlingsnummer = BEHANDLINGSNUMMER)
                     } catch (e: PdlException) {
                         logger.error("PDL hentForenkletStatus feiler med: $e", e)
                         null
