@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory
 const val BEHANDLINGSNUMMER = "B452"
 
 fun interface PdlHentForenkletStatus {
-    fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String, behandlingsnummer: String): List<HentPersonBolkResult>?
+    fun hentForenkletStatus(ident: List<String>, callId: String, navConsumerId: String): List<HentPersonBolkResult>?
 
     companion object {
         val logger = LoggerFactory.getLogger("pdlClient")
 
         fun create(): PdlHentForenkletStatus {
             val pdlClient = createPdlClient()
-            return PdlHentForenkletStatus { ident, callId, navConsumerId, _ ->
+            return PdlHentForenkletStatus { ident, callId, navConsumerId ->
                 runBlocking {
                     try {
                         pdlClient.hentForenkletStatusBolk(ident = ident, callId = callId, navConsumerId = navConsumerId, behandlingsnummer = BEHANDLINGSNUMMER)
