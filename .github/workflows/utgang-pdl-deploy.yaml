@@ -71,3 +71,17 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: utgang-pdl/nais/nais-dev.yaml
           VAR: image=${{ needs.build.outputs.image }},kafka=nav-dev
+  deploy-prod:
+    name: Deploy to prod-gcp
+    permissions:
+      contents: read
+      id-token: write
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: prod-gcp
+          RESOURCE: utgang-pdl/nais/nais-prod.yaml
+          VAR: image=${{ needs.build.outputs.image }},kafka=nav-prod

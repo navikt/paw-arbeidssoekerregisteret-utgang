@@ -40,9 +40,8 @@ fun interface PdlHentForenkletStatus {
 }
 
 private fun createPdlClient(): PdlClient {
-    val naisEnv = currentNaisEnv
     val azureM2MConfig = loadNaisOrLocalConfiguration<AzureM2MConfig>("azure_m2m.toml")
-    val m2mTokenClient = azureAdM2MTokenClient(naisEnv, azureM2MConfig)
+    val m2mTokenClient = azureAdM2MTokenClient(currentNaisEnv, azureM2MConfig)
     val pdlConfig = loadNaisOrLocalConfiguration<PdlConfig>(PDL_CONFIG_FILE)
 
     return PdlClient(pdlConfig.url, pdlConfig.tema, createHttpClient()) {
