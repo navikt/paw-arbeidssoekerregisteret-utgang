@@ -5,7 +5,6 @@ plugins {
 
 include(
     "utgang-pdl",
-    "utgang-formidlingsgruppe",
     "main-avro-schema-classes",
     "kafka-key-generator-client"
 )

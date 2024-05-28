@@ -1,3 +1,5 @@
+Flyttet til paw-arbeidssoekerregisteret-monorepo-intern
+
 # paw-arbeidssoekerregisteret-utgang-formidlingsgruppe
 
 ## Hvordan fungerer det
