@@ -15,7 +15,7 @@ spec:
     - name: PDL_URL
       value: "https://pdl-api.prod-fss-pub.nais.io/graphql"
     - name: HENDELSELOGG_TOPIC
-      value: "paw.arbeidssoker-hendelseslogg-v1-test"
+      value: "paw.arbeidssoker-hendelseslogg-v1"
   azure:
     application:
       enabled: true
