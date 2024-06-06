@@ -1,4 +1,4 @@
-applicationIdSuffix = "v2" #TODO: øk til v3 ved fjerning av -test fra hendelselogg-topic i prod
+applicationIdSuffix = "v3"
 periodeTopic = "paw.arbeidssokerperioder-v1"
 hendelseloggTopic = "${HENDELSELOGG_TOPIC}"
 hendelseStateStoreName = "hendelseState"
