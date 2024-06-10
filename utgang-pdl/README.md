@@ -1,3 +1,4 @@
+# Denne appen er flyttet til [paw-arbeidssoekerregisteret-monorepo-intern](https://github.com/navikt/paw-arbeidssoekerregisteret-monorepo-intern)
 # paw-arbeidssoekerregisteret-pdl-utgang
 
 ## Hvordan fungerer det
