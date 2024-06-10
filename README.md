@@ -1,3 +1,5 @@
+# Utgang apper er flyttet til [paw-arbeidssoekerregisteret-monorepo-intern](https://github.com/navikt/paw-arbeidssoekerregisteret-monorepo-intern)
+
 # paw-arbeidssoekerregisteret-utgang
 
 ## Utganger for arbeidssøkerregisteret
